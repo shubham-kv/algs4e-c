@@ -1,5 +1,7 @@
 
-Data Structures and Algorithms written in C from [Algorithms (4th Edition)](https://algs4.cs.princeton.edu/home/) textbook by *Sedgewick* & *Wayne*.
+Data Structures and Algorithms written in C from [Algorithms (4th
+Edition)](https://algs4.cs.princeton.edu/home/) textbook by *Sedgewick* &
+*Wayne*.
 
 ## Index
 
@@ -11,7 +13,7 @@ algorithms.
 ### Requirements
 
 Please ensure you have `cmake` (minimum version `4.1`), `make` (GNU Make `3.81`)
-and `criterion` (for testing) installed on you system.
+and `criterion` (for testing) installed on your system.
 
 ### Installation
 
@@ -37,7 +39,7 @@ cmake -S . -B build
 or you can make a `build` directory, `cd` into `build` directory and run
 `cmake` there with no arguments.
 
-In this case Cmake makes `Makefile`s in the `build` directory for us to use.
+In this case `cmake` makes `Makefile`s in the `build` directory for us to use.
 Build a specific client for example the `graph_paths_client.c` in
 `clients/graph/` by using the make command like the following:
 
@@ -61,8 +63,8 @@ An example passing in the arguments:
 
 ### Testing
 
-Tests live inside the `tests` directory and all test file are prefixed with
-`test_`, for example the test file for `graph_paths_bfp.c` under
+Tests live inside the `tests` directory and all the test files are prefixed
+with a `test_`, for example the test file for `graph_paths_bfp.c` under
 `lib/graph/graph_paths_bfp/` is `test_graph_paths_bfp.c` and to build it run:
 
 ```bash
@@ -78,7 +80,7 @@ make -C build/tests
 Simply run the output binary from the `build/bin/` directory to run your test
 (similar to how you would run any other executable file).
 
-Use `ctest` for a quick run run of all the tests after building all the test
+Use `ctest` for a quick run of all the tests after building all the test
 executables:
 
 ```bash
