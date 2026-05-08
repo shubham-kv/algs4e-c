@@ -55,7 +55,7 @@ inline bool Stack_IsEmpty(Stack stack) {
 }
 
 inline void StackIterator_Init(StackIterator iterator, Stack stack) {
-  iterator->stack = stack, iterator->cur = iterator->stack->top;
+  iterator->cur = stack->top;
 }
 
 inline void StackIterator_Clear(StackIterator iterator) {

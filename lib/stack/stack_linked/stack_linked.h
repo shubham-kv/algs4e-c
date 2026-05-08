@@ -27,7 +27,6 @@ Item Stack_Peek(Stack stack);
 bool Stack_IsEmpty(Stack stack);
 
 struct LLStackIterator {
-  struct LinkedStack *stack;
   struct StackNode *cur;
 };
 
