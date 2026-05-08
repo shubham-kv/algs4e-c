@@ -1,2 +1,2 @@
-add_executable(queue_linked_list_client queue_linked_list_client.c)
-target_link_libraries(queue_linked_list_client PRIVATE queue_linked_list)
+add_executable(queue_linked_client queue_linked_client.c)
+target_link_libraries(queue_linked_client PRIVATE queue_linked)

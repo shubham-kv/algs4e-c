@@ -1,11 +1,13 @@
+#include "queue_linked.h"
+#include "common_macros.h"
 #include <memory.h>
 #include <stdlib.h>
-#include "queue_linked_list.h"
 
 struct QueueNode {
   struct QueueNode *next;
-  Item data;
+  Item item;
 };
+
 typedef struct QueueNode *Node;
 
 inline void Queue_Init(Queue queue) {
@@ -16,76 +18,66 @@ void Queue_Clear(Queue queue) {
   while (!Queue_IsEmpty(queue)) {
     Queue_Dequeue(queue);
   }
-  memset(queue, 0, sizeof(struct LinkedListQueue));
+  memset(queue, 0, sizeof(*queue));
 }
 
 void Queue_Enqueue(Queue queue, Item item) {
-  Node node = calloc(1, sizeof(struct QueueNode));
-  node->data = item;
+  Node node = calloc(1, sizeof(*node));
+  node->item = item;
 
-  if (queue->last) {
+  if (IS_NOT_NULL(queue->last)) {
     queue->last->next = node;
-    queue->last = node;
   } else {
     queue->first = node;
-    queue->last = queue->first;
   }
+
+  queue->last = node;
   queue->size++;
 }
 
 Item Queue_Dequeue(Queue queue) {
-  if (Queue_IsEmpty(queue)) {
+  if (IS_NULL(queue->first)) {
     return NULL;
   }
 
-  Item firstItem = queue->first->data;
+  Item item = queue->first->item;
   Node next = queue->first->next;
   free(queue->first), (queue->first = NULL);
 
-  if (next) {
-    queue->first = next;
-  } else {
-    queue->first = NULL;
-    queue->last = queue->first;
+  if (IS_NULL(next)) {
+    queue->last = NULL;
   }
+  queue->first = next;
   queue->size--;
 
-  return firstItem;
+  return item;
 }
 
 inline Item Queue_Peek(Queue queue) {
-  return Queue_IsEmpty(queue) ? NULL : queue->first->data;
+  return IS_NULL(queue->first) ? NULL : queue->first->item;
 }
 
-inline int Queue_Size(Queue queue) {
-  return queue->size;
-}
+inline int Queue_Size(Queue queue) { return queue->size; }
 
-inline bool Queue_IsEmpty(Queue queue) {
-  return Queue_Size(queue) == 0;
-}
-
+inline bool Queue_IsEmpty(Queue queue) { return Queue_Size(queue) == 0; }
 
 inline void QueueIterator_Init(QueueIterator iterator, Queue queue) {
-  (iterator->queue = queue), (iterator->cur = iterator->queue->first);
+  iterator->cur = queue->first;
 }
 
 inline void QueueIterator_Clear(QueueIterator iterator) {
-  memset(iterator, 0, sizeof(struct LLQueueIterator));
+  memset(iterator, 0, sizeof(*iterator));
 }
 
 inline bool QueueIterator_HasNext(QueueIterator iterator) {
-  return iterator->cur != NULL;
+  return IS_NOT_NULL(iterator->cur);
 }
 
 Item QueueIterator_GetNext(QueueIterator iterator) {
-  if (!QueueIterator_HasNext(iterator)) {
+  if (IS_NULL(iterator->cur)) {
     return NULL;
   }
-
-  Item firstItem = iterator->cur->data;
+  Item item = iterator->cur->item;
   iterator->cur = iterator->cur->next;
-
-  return firstItem;
+  return item;
 }
-
