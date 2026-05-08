@@ -2,7 +2,7 @@
 #include <memory.h>
 #include <stdlib.h>
 
-#define INITIAL_CAPACITY 8
+#define INITIAL_CAPACITY 2
 
 void Stack_Init(Stack stack) {
   stack->capacity = INITIAL_CAPACITY;
@@ -21,7 +21,7 @@ static void resize(Stack stack, size_t newCapacity) {
 }
 
 void Stack_Push(Stack stack, Item item) {
-  if (stack->size < stack->capacity) {
+  if (stack->size >= stack->capacity) {
     resize(stack, stack->capacity * 2);
   }
   stack->items[stack->size++] = item;
@@ -36,7 +36,7 @@ Item Stack_Pop(Stack stack) {
   stack->items[stack->size - 1] = NULL;
   stack->size--;
 
-  if (stack->size < stack->capacity / 4) {
+  if (0 < stack->size && stack->size <= stack->capacity / 4) {
     resize(stack, stack->capacity / 2);
   }
 
