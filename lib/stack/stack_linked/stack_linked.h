@@ -1,18 +1,18 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#ifndef __linked_list_stack_h
-#define __linked_list_stack_h
+#ifndef __linked_stack_h
+#define __linked_stack_h
 
 struct StackNode;
-struct LinkedListStack;
+struct LinkedStack;
 struct LLStackIterator;
 
 typedef const void *Item;
-typedef struct LinkedListStack *Stack;
+typedef struct LinkedStack *Stack;
 typedef struct LLStackIterator *StackIterator;
 
-struct LinkedListStack {
+struct LinkedStack {
   struct StackNode *top;
   int size;
 };
@@ -27,7 +27,7 @@ Item Stack_Peek(Stack stack);
 bool Stack_IsEmpty(Stack stack);
 
 struct LLStackIterator {
-  struct LinkedListStack *stack;
+  struct LinkedStack *stack;
   struct StackNode *cur;
 };
 
@@ -36,4 +36,4 @@ void StackIterator_Clear(StackIterator iterator);
 bool StackIterator_HasNext(StackIterator iterator);
 Item StackIterator_GetNext(StackIterator iterator);
 
-#endif // __linked_list_stack_h
+#endif // __linked_stack_h

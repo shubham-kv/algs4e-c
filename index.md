@@ -15,7 +15,7 @@
 
 1. [Stack (Fixed Capacity)](./lib/stack/stack_fixed_capacity/stack_fixed_capacity.c)
 1. [Stack (Resizing Array)](./lib/stack/stack_resizing_array/stack_resizing_array.c)
-1. [Stack (Linked List)](./lib/stack/stack_linked_list/stack_linked_list.c)
+1. [Stack (Linked List)](./lib/stack/stack_linked/stack_linked.c)
 1. [Queue (Linked List)](./lib/queue/queue_linked/queue_linked_list.c)
 1. [Bag (Linked List)](./lib/bag/bag_linked/bag_linked.c)
 

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pq_max_heap.h"
-#include "stack_linked_list.h"
+#include "stack_linked.h"
 
 int intCmp(const void *a, const void *b);
 
@@ -60,7 +60,7 @@ int main(int argc, const char *argv[]) {
 
   printf("size() = %d\n", MaxPQ_Size(pq));
 
-  struct LinkedListStack _stack, *stack = &_stack;
+  struct LinkedStack _stack, *stack = &_stack;
   Stack_Init(stack);
 
   while (!MaxPQ_IsEmpty(pq)) {

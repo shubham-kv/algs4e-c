@@ -1,3 +1,3 @@
 add_executable(pq_max_heap_client pq_max_heap_client.c)
 target_link_libraries(pq_max_heap_client PRIVATE pq_max_heap)
-target_link_libraries(pq_max_heap_client PRIVATE stack_linked_list)
+target_link_libraries(pq_max_heap_client PRIVATE stack_linked)

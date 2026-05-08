@@ -4,6 +4,6 @@ target_link_libraries(stack_fixed_capacity_client PRIVATE stack_fixed_capacity)
 add_executable(stack_resizing_array_client stack_resizing_array_client.c)
 target_link_libraries(stack_resizing_array_client PRIVATE stack_resizing_array)
 
-add_executable(stack_linked_list_client stack_linked_list_client.c)
-target_link_libraries(stack_linked_list_client PRIVATE stack_linked_list)
+add_executable(stack_linked_client stack_linked_client.c)
+target_link_libraries(stack_linked_client PRIVATE stack_linked)
 
