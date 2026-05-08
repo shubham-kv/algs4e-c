@@ -12,8 +12,8 @@ algorithms.
 
 ### Requirements
 
-Please ensure you have `cmake` (minimum version `4.1`), `make` (GNU Make `3.81`)
-and `criterion` (for testing) installed on your system.
+Please ensure you have `cmake` (minimum version `4.1`), `make` (GNU Make
+`3.81`), `criterion` (for testing) and `pkgconf` installed on your system.
 
 ### Installation
 
@@ -34,10 +34,12 @@ Build the project with `cmake`:
 
 ```bash
 cmake -S . -B build
+OR
+cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON   # To generate compile_commands.json
 ```
 
 or you can make a `build` directory, `cd` into `build` directory and run
-`cmake` there with no arguments.
+`cmake` in that directory with no arguments.
 
 In this case `cmake` makes `Makefile`s in the `build` directory for us to use.
 Build a specific client for example the `graph_paths_client.c` in
