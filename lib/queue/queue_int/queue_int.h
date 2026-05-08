@@ -5,59 +5,48 @@
 #ifndef __queue_int_h
 #define __queue_int_h
 
-/** Queue of integers (FIFO order) */
+struct IntegerQueueNode;
 struct IntegerQueue;
-typedef struct IntegerQueue *IntQueue;
-typedef int64_t IntQueueItem;
-
-#define QUEUE IntQueue
-#define ITEM IntQueueItem
-
-/** Creates a growable queue of integers on heap. */
-QUEUE IntQueue_Create();
-void IntQueue_Free(QUEUE *queue);
-
-/** Adds an item to the queue, returns `0` on success or `-1` otherwise. */
-int IntQueue_Enqueue(QUEUE queue, ITEM item);
-
-/** Removes the least recently added item from the queue, returns the item on
- * success or `-1` otherwise, use `IntQueue_Size` or `IntQueue_IsEmpty` to
- * determine if queue contains integers. */
-ITEM IntQueue_Dequeue(QUEUE queue);
-
-/** Returns the least recently added item to the queue, returns `-1` on error. */
-ITEM IntQueue_Peek(QUEUE queue);
-
-/** Returns the number of items in the queue, crashes if `queue` is `NULL`. */
-size_t IntQueue_Size(QUEUE queue);
-
-/** Returns a boolean indicating whether the queue is empty, crashes if `queue`
- * is `NULL`. */
-bool IntQueue_IsEmpty(QUEUE queue);
-
-
-/** Iterator to yield integers in the queue (FIFO order). */
 struct IntegerQueueIterator;
-typedef struct IntegerQueueIterator *IntQueueIter;
 
-#define ITER IntQueueIter
+typedef int64_t IntQueueItem;
+typedef struct IntegerQueueNode *IntQueueNode;
+typedef struct IntegerQueue *IntQueue;
+typedef struct IntegerQueueIterator *IntQueueIterator;
 
-/** Creates an iterator on the heap to yield integers in the queue (FIFO order).
- */
+#define ITEM IntQueueItem
+#define QUEUE IntQueue
+#define ITER IntQueueIterator
+
+struct IntegerQueue {
+  struct IntegerQueueNode *first;
+  struct IntegerQueueNode *last;
+  size_t size;
+};
+
+QUEUE IntQueue_Create();
+ void IntQueue_Init(QUEUE queue);
+ void IntQueue_Clear(QUEUE queue);
+ void IntQueue_Delete(QUEUE *queue);
+  int IntQueue_Enqueue(QUEUE queue, ITEM item);
+  int IntQueue_Dequeue(QUEUE queue, ITEM *out);
+  int IntQueue_Peek(QUEUE queue, ITEM *out);
+  int IntQueue_Size(QUEUE queue);
+ bool IntQueue_IsEmpty(QUEUE queue);
+
+struct IntegerQueueIterator {
+  struct IntegerQueueNode *cur;
+};
+
 ITER IntQueueIter_Create(QUEUE queue);
-void IntQueueIter_Free(ITER *iterator);
-
-/** Returns a boolean indicating whether there is a next item to consume.
- * Crashes if `iterator` is `NULL`. */
+void IntQueueIter_Init(ITER iterator, QUEUE queue);
+void IntQueueIter_Clear(ITER iterator);
+void IntQueueIter_Delete(ITER *iterator);
 bool IntQueueIter_HasNext(ITER iterator);
+ int IntQueueIter_GetNext(ITER iterator, ITEM *out);
 
-/** Consumes and returns the next item in the queue if there is one otherwise
- * sets `errno` and returns `-1`. */
-ITEM IntQueueIter_GetNext(ITER iterator);
-
-#undef ITER
 #undef ITEM
 #undef QUEUE
+#undef ITER
 
 #endif // __queue_int_h
-

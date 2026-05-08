@@ -1,140 +1,141 @@
-#include <errno.h>
-#include <stdlib.h>
 #include "queue_int.h"
 #include "common_macros.h"
+#include <errno.h>
+#include <memory.h>
+#include <stdlib.h>
 
-struct IntegerQueueNode;
-typedef struct IntegerQueueNode *IntQueueNode;
-
-#define QUEUE IntQueue
 #define ITEM IntQueueItem
 #define NODE IntQueueNode
+#define QUEUE IntQueue
+#define ITER IntQueueIterator
 
 struct IntegerQueueNode {
-  NODE next;
-  ITEM data;
+  IntQueueItem item;
+  struct IntegerQueueNode *next;
 };
-
-struct IntegerQueue {
-  NODE first;
-  NODE last;
-  size_t size;
-};
-
 
 QUEUE IntQueue_Create() {
-  QUEUE queue = calloc(1, sizeof(struct IntegerQueue));
+  QUEUE queue = calloc(1, sizeof(*queue));
   if (IS_NULL(queue)) { errno = ENOMEM; return NULL; }
 
-  queue->first = NULL;
-  queue->last = NULL;
-  queue->size = 0;
+  IntQueue_Init(queue);
   return queue;
 }
 
-void IntQueue_Free(QUEUE *queue) {
+inline void IntQueue_Init(QUEUE queue) {
+  (queue->first = (queue->last = NULL)), (queue->size = 0);
+}
+
+void IntQueue_Clear(QUEUE queue) {
+  if (IS_NULL(queue)) { return; }
+
+  while (!IntQueue_IsEmpty(queue)) {
+    IntQueue_Dequeue(queue, NULL);
+  }
+}
+
+void IntQueue_Delete(QUEUE *queue) {
   if (IS_NULL(queue) || IS_NULL(*queue)) { return; }
 
-  while (!IntQueue_IsEmpty(*queue)) {
-    IntQueue_Dequeue(*queue);
-  }
+  IntQueue_Clear(*queue);
   free(*queue), (*queue = NULL);
 }
 
-int IntQueue_Enqueue(QUEUE queue, ITEM data) {
+int IntQueue_Enqueue(QUEUE queue, ITEM item) {
   if (IS_NULL(queue)) { errno = EINVAL; return -1; }
 
-  NODE node = calloc(1, sizeof(struct IntegerQueueNode));
+  NODE node = calloc(1, sizeof(*node));
   if (IS_NULL(node)) { errno = ENOMEM; return -1; }
 
-  node->data = data;
-  node->next = NULL;
+  node->item = item;
 
-  if (queue->last) {
+  if (IS_NOT_NULL(queue->last)) {
     queue->last->next = node;
-    queue->last = node;
   } else {
     queue->first = node;
-    queue->last = queue->first;
   }
+
+  queue->last = node;
   queue->size++;
+
   return 0;
 }
 
-ITEM IntQueue_Dequeue(QUEUE queue) {
+int IntQueue_Dequeue(QUEUE queue, ITEM *out) {
   if (IS_NULL(queue)) { errno = EINVAL; return -1; }
   if (IS_NULL(queue->first)) { errno = ENODATA; return -1; }
+
+  if (IS_NOT_NULL(out)) {
+    *out = queue->first->item;
+  }
 
   NODE next = queue->first->next;
-  ITEM data = queue->first->data;
   free(queue->first), (queue->first = NULL);
 
-  if (next) {
-    queue->first = next;
-  } else {
-    queue->first = NULL;
-    queue->last = queue->first;
+  if (IS_NULL(next)) {
+    queue->last = NULL;
   }
+  queue->first = next;
   queue->size--;
-  return data;
+
+  return 0;
 }
 
-ITEM IntQueue_Peek(QUEUE queue) {
+int IntQueue_Peek(QUEUE queue, ITEM *out) {
   if (IS_NULL(queue)) { errno = EINVAL; return -1; }
   if (IS_NULL(queue->first)) { errno = ENODATA; return -1; }
 
-  return queue->first->data;
+  if (IS_NOT_NULL(out)) {
+    *out = queue->first->item;
+  }
+  return 0;
 }
 
-inline size_t IntQueue_Size(QUEUE queue) {
-  return queue->size;
-}
+inline int IntQueue_Size(QUEUE queue) { return queue->size; }
 
-inline bool IntQueue_IsEmpty(QUEUE queue) {
-  return IntQueue_Size(queue) == 0;
-}
-
-
-struct IntegerQueueIterator {
-  QUEUE queue;
-  NODE next;
-};
-
-#define ITER IntQueueIter
+inline bool IntQueue_IsEmpty(QUEUE queue) { return IntQueue_Size(queue) == 0; }
 
 ITER IntQueueIter_Create(QUEUE queue) {
   if (IS_NULL(queue)) { errno = EINVAL; return NULL; }
 
-  ITER iterator = calloc(1, sizeof(struct IntegerQueueIterator));
+  ITER iterator = calloc(1, sizeof(*iterator));
   if (IS_NULL(iterator)) { errno = ENOMEM; return NULL; }
 
-  iterator->queue = queue;
-  iterator->next = iterator->queue->first;
+  IntQueueIter_Init(iterator, queue);
 
   return iterator;
 }
 
-void IntQueueIter_Free(ITER *iterator) {
-  if (IS_NULL(iterator) || IS_NULL(*iterator)) { return; }
+inline void IntQueueIter_Init(ITER iterator, QUEUE queue) {
+  iterator->cur = queue->first;
+}
 
+inline void IntQueueIter_Clear(ITER iterator) {
+  memset(iterator, 0, sizeof(*iterator));
+}
+
+void IntQueueIter_Delete(ITER *iterator) {
+  if (IS_NULL(iterator) || IS_NULL(*iterator)) {
+    return;
+  }
+  IntQueueIter_Clear(*iterator);
   free(*iterator), (*iterator = NULL);
 }
 
 inline bool IntQueueIter_HasNext(ITER iterator) {
-  return !IS_NULL(iterator->next);
+  return IS_NOT_NULL(iterator->cur);
 }
 
-ITEM IntQueueIter_GetNext(ITER iterator) {
+int IntQueueIter_GetNext(ITER iterator, ITEM *out) {
   if (IS_NULL(iterator)) { errno = EINVAL; return -1; }
-  if (!IntQueueIter_HasNext(iterator)) { errno = ENODATA; return -1; }
+  if (IS_NULL(iterator->cur)) { errno = ENODATA; return -1; }
 
-  ITEM data = iterator->next->data;
-  iterator->next = iterator->next->next;
-  return data;
+  *out = iterator->cur->item;
+  iterator->cur = iterator->cur->next;
+  return 0;
 }
 
-#undef ITER
-#undef NODE
 #undef ITEM
+#undef NODE
 #undef QUEUE
-
+#undef ITER
