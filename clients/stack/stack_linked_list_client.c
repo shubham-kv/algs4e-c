@@ -1,9 +1,9 @@
+#include "stack_linked_list.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "stack_linked_list.h"
 
-#define BUFFER_SIZE 60
+#define BUFFER_SIZE 128
 
 /**
  * ### Compile:
@@ -16,46 +16,48 @@
  *
  */
 int main() {
+  printf("** LinkedListStack **\n");
+  printf("=====================\n");
+  printf("\n");
+
+  char inputBuffer[BUFFER_SIZE];
   struct LinkedListStack _stack, *stack = &_stack;
   Stack_Init(stack);
 
-  char inputBuffer[BUFFER_SIZE];
-
-  printf("** Stack (Linked List) **\n");
-  printf("\n");
-
-  while (fscanf(stdin, "%59s", inputBuffer) != EOF) {
+  while (fscanf(stdin, "%127s", inputBuffer) != EOF) {
     if (strncmp(inputBuffer, "x\0", 2) == 0) {
       break;
     }
 
     if (strncmp(inputBuffer, "-\0", 2) == 0) {
-      if (Stack_Size(stack) > 0) {
-        char *popped = (char *) Stack_Pop(stack);
-        printf("pop() = %s\n", popped);
-        free(popped);
-      } else {
+      if (Stack_IsEmpty(stack)) {
         printf("Stack is empty\n");
+        continue;
       }
+
+      char *popped = (char *)Stack_Pop(stack);
+      printf("pop() = %s\n", popped);
+      free(popped), (popped = NULL);
+      continue;
     }
-    else {
-      size_t bufLen = strlen(inputBuffer);
-      char *input = calloc(bufLen + 1, sizeof(char));
-      snprintf(input, bufLen + 1, "%s", inputBuffer);
-      Stack_Push(stack, input);
-      printf("push(%s)\n", input);
-    }
+
+    size_t bufLen = strlen(inputBuffer);
+    char *input = calloc(bufLen + 1, sizeof(*input));
+    snprintf(input, bufLen + 1, "%s", inputBuffer);
+    printf("push(%s)\n", input);
+    Stack_Push(stack, input);
   }
 
   printf("\n");
-  printf("peek() = %s\n", (char *) Stack_Peek(stack));
+  printf("isEmpty() = %s\n", Stack_IsEmpty(stack) ? "true" : "false");
   printf("size() = %d\n", Stack_Size(stack));
+  printf("peek() = %s\n", (char *)Stack_Peek(stack));
 
   struct LLStackIterator _iterator, *iterator = &_iterator;
   StackIterator_Init(iterator, stack);
 
   while (StackIterator_HasNext(iterator)) {
-    char *input = (char *) StackIterator_GetNext(iterator);
+    char *input = (char *)StackIterator_GetNext(iterator);
     printf("iterator_next() = %s\n", input);
   }
   printf("\n");
@@ -63,7 +65,7 @@ int main() {
   StackIterator_Clear(iterator), (iterator = NULL);
 
   while (!Stack_IsEmpty(stack)) {
-    free((char *) Stack_Pop(stack));
+    free((char *)Stack_Pop(stack));
   }
   Stack_Clear(stack), (stack = NULL);
 
@@ -71,4 +73,3 @@ int main() {
 }
 
 #undef BUFFER_SIZE
-
