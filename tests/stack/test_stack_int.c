@@ -3,17 +3,17 @@
 #include <stdint.h>
 #include "stack_int.h"
 
-static IntStack stack;
+static struct IntegerStack _stack, *stack = &_stack;
 static const int ERR_RETURN_CODE = -1;
 static const int SUCCESS_RETURN_CODE = 0;
 
 static void setup() {
-  stack = IntStack_Create();
+  IntStack_Init(stack);
   cr_assert(stack != NULL);
 }
 
 static void teardown() {
-  IntStack_Free(&stack);
+  IntStack_Clear(stack);
 }
 
 Test(
@@ -29,10 +29,10 @@ Test(
   cr_assert(IntStack_Size(stack) == 3);
   cr_assert(IntStack_IsEmpty(stack) == false);
 
-  IntStackIter iterator = IntStackIter_Create(stack);
+  IntStackIterator iterator = IntStackIter_Create(stack);
   cr_assert(iterator != NULL);
 
-  int64_t integer;
+  IntStackItem integer;
   cr_assert(IntStackIter_HasNext(iterator) == true);
   cr_assert(IntStackIter_GetNext(iterator, &integer) == SUCCESS_RETURN_CODE);
   cr_assert(10 == integer);
@@ -48,7 +48,7 @@ Test(
   cr_assert(IntStackIter_HasNext(iterator) == false);
   cr_assert(IntStackIter_GetNext(iterator, &integer) == ERR_RETURN_CODE);
 
-  IntStackIter_Free(&iterator);
+  IntStackIter_Delete(&iterator);
 }
 
 
@@ -62,17 +62,21 @@ Test(
   IntStack_Push(stack,  0);
   IntStack_Push(stack, 10);
 
+  IntStackItem integer;
   cr_assert(IntStack_IsEmpty(stack) == false);
-  cr_assert(IntStack_Pop(stack) == 10);
+  cr_assert(IntStack_Pop(stack, &integer) == SUCCESS_RETURN_CODE);
+  cr_assert(integer == 10);
 
   cr_assert(IntStack_IsEmpty(stack) == false);
-  cr_assert(IntStack_Pop(stack) ==  0);
+  cr_assert(IntStack_Pop(stack, &integer) == SUCCESS_RETURN_CODE);
+  cr_assert(integer == 0);
 
   cr_assert(IntStack_IsEmpty(stack) == false);
-  cr_assert(IntStack_Pop(stack) == -1);
+  cr_assert(IntStack_Pop(stack, &integer) == SUCCESS_RETURN_CODE);
+  cr_assert(integer == -1);
 
   cr_assert(IntStack_IsEmpty(stack) == true);
-  cr_assert(IntStack_Pop(stack) == ERR_RETURN_CODE);
+  cr_assert(IntStack_Pop(stack, &integer) == ERR_RETURN_CODE);
 }
 
 
@@ -83,35 +87,34 @@ Test(
     .fini = teardown
 ) {
   const int integersSize = INT16_MAX;
-  int64_t integers[integersSize];
+  IntStackItem integers[integersSize];
 
   for (int i = 0; i < integersSize; i++) {
     integers[i] = i;
     cr_assert(IntStack_Push(stack, i) == SUCCESS_RETURN_CODE);
   }
-
   cr_assert(IntStack_Size(stack) == integersSize);
 
   int i = 0;
-  IntStackIter iterator = IntStackIter_Create(stack);
-  cr_assert(iterator != NULL);
+  IntStackIterator iterator = IntStackIter_Create(stack);
 
+  cr_assert(iterator != NULL);
   cr_assert(IntStackIter_HasNext(iterator) == true);
 
   for (i = 0; IntStackIter_HasNext(iterator); i++) {
-    int64_t integer = 0;
-    cr_assert(IntStackIter_GetNext(iterator, &integer) == SUCCESS_RETURN_CODE);
+    IntStackItem actual = 0;
+    cr_assert(IntStackIter_GetNext(iterator, &actual) == SUCCESS_RETURN_CODE);
 
-    const int expectedInteger = integers[(integersSize - 1) - i];
-    cr_assert(integer == expectedInteger,
-              "Expected next integer to be %d, it is %lld", expectedInteger,
-              integer);
+    const IntStackItem expected = integers[(integersSize - 1) - i];
+    cr_assert(actual == expected,
+              "Expected next integer to be %lld, it is %lld", expected,
+              actual);
   }
 
   cr_assert(i == integersSize, "Expected the iterator to consume all %d items, "
                                "but %d were consumed", integersSize, i);
 
-  IntStackIter_Free(&iterator);
+  IntStackIter_Delete(&iterator);
 }
 
 
@@ -122,7 +125,7 @@ Test(
     .fini = teardown
 ) {
   const int integersSize = INT16_MAX;
-  int64_t integers[integersSize];
+  IntStackItem integers[integersSize];
 
   for (int i = 0; i < integersSize; i++) {
     integers[i] = i;
@@ -131,13 +134,15 @@ Test(
 
   cr_assert(IntStack_Size(stack) == integersSize);
 
-  int i = 0;
+  IntStackItem i, actual;
+
   for (i = 0; !IntStack_IsEmpty(stack); i++) {
-    const int expectedInteger = integers[(integersSize - 1) - i];
-    cr_assert(IntStack_Pop(stack) == expectedInteger);
+    const IntStackItem expected = integers[(integersSize - 1) - i];
+    cr_assert(IntStack_Pop(stack, &actual) == SUCCESS_RETURN_CODE);
+    cr_assert(actual == expected);
   }
 
   cr_assert(i == integersSize, "Expected the stack to pop all %d items, "
-                               "but only %d were popped", integersSize, i);
+                               "but only %lld were popped", integersSize, i);
 }
 
