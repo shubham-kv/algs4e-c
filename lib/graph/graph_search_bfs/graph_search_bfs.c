@@ -19,18 +19,22 @@ static int _breadthFirstSearch(BFS bfs, const int s) {
   if (IS_NULL(bfs)) { errno = EINVAL; return -1; }
   if (!IS_VERTEX_IN_RANGE(bfs->verticesCount, s)) { errno = ERANGE; return -1; }
 
-  IntQueue queue = IntQueue_Create();
-  if (IS_NULL(queue)) { return -1; }
+  struct IntegerQueue _queue, *queue = &_queue;
+  IntQueue_Init(queue);
 
   IntQueue_Enqueue(queue, s);
 
   while (!IntQueue_IsEmpty(queue)) {
-    const int v = IntQueue_Dequeue(queue);
+    IntQueueItem v;
+    if (IntQueue_Dequeue(queue, &v) != 0) {
+      return -1;
+    }
+
     bfs->marked[v] = true;
     bfs->count++;
 
     AdjVertexIter adjacentVertexIterator = AdjVertexIter_Create(bfs->graph, v);
-    if (IS_NULL(adjacentVertexIterator)) { IntQueue_Free(&queue); return -1; }
+    if (IS_NULL(adjacentVertexIterator)) { IntQueue_Clear(queue); return -1; }
 
     while (AdjVertexIter_HasNext(adjacentVertexIterator)) {
       int w;
@@ -44,7 +48,7 @@ static int _breadthFirstSearch(BFS bfs, const int s) {
     AdjVertexIter_Free(&adjacentVertexIterator);
   }
 
-  IntQueue_Free(&queue);
+  IntQueue_Clear(queue);
   return 0;
 }
 

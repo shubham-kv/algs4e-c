@@ -11,7 +11,7 @@ static void setup() {
 }
 
 static void teardown() {
-  IntQueue_Free(&queue);
+  IntQueue_Delete(&queue);
 }
 
 
@@ -23,43 +23,44 @@ Test(
 ) {
   cr_assert(IntQueue_IsEmpty(queue));
   cr_assert_eq(IntQueue_Size(queue), 0);
-  cr_assert_eq(IntQueue_Peek(queue), ERR_RETURN_CODE);
+  cr_assert_eq(IntQueue_Peek(queue, NULL), ERR_RETURN_CODE);
 
   IntQueue_Enqueue(queue,  -1);
   IntQueue_Enqueue(queue,   0);
   IntQueue_Enqueue(queue,  +1);
 
+  IntQueueItem item;
   cr_assert(!IntQueue_IsEmpty(queue));
   cr_assert_eq(IntQueue_Size(queue), 3);
-  cr_assert_eq(IntQueue_Peek(queue), -1);
+  cr_assert_eq(IntQueue_Peek(queue, &item), SUCCESS_RETURN_CODE);
+  cr_assert_eq(item, -1);
 
-  IntQueueIter iterator = IntQueueIter_Create(queue);
-  cr_assert(iterator);
-
-  int expected, actual;
+  IntQueueItem expected, actual;
+  struct IntegerQueueIterator _iterator, *iterator = &_iterator;
+  IntQueueIter_Init(iterator, queue);
 
   expected = -1;
   cr_assert(IntQueueIter_HasNext(iterator));
-  actual = IntQueueIter_GetNext(iterator);
-  cr_assert_eq(actual, expected, "Expected next integer to be %d, got %d",
+  cr_assert_eq(IntQueueIter_GetNext(iterator, &actual), SUCCESS_RETURN_CODE);
+  cr_assert_eq(expected, actual, "Expected next integer to be %lld, got %lld",
                expected, actual);
 
   expected = 0;
   cr_assert(IntQueueIter_HasNext(iterator));
-  actual = IntQueueIter_GetNext(iterator);
-  cr_assert_eq(actual, expected, "Expected next integer to be %d, got %d",
+  cr_assert_eq(IntQueueIter_GetNext(iterator, &actual), SUCCESS_RETURN_CODE);
+  cr_assert_eq(expected, actual, "Expected next integer to be %lld, got %lld",
                expected, actual);
 
   expected = 1;
   cr_assert(IntQueueIter_HasNext(iterator));
-  actual = IntQueueIter_GetNext(iterator);
-  cr_assert_eq(actual, expected, "Expected next integer to be %d, got %d",
+  cr_assert_eq(IntQueueIter_GetNext(iterator, &actual), SUCCESS_RETURN_CODE);
+  cr_assert_eq(expected, actual, "Expected next integer to be %lld, got %lld",
                expected, actual);
 
   cr_assert(!IntQueueIter_HasNext(iterator));
-  cr_assert_eq(IntQueueIter_GetNext(iterator), ERR_RETURN_CODE);
+  cr_assert_eq(IntQueueIter_GetNext(iterator, NULL), ERR_RETURN_CODE);
 
-  IntQueueIter_Free(&iterator);
+  IntQueueIter_Clear(iterator);
 }
 
 
@@ -71,37 +72,38 @@ Test(
 ) {
   cr_assert(IntQueue_IsEmpty(queue));
   cr_assert_eq(IntQueue_Size(queue), 0);
-  cr_assert_eq(IntQueue_Peek(queue), ERR_RETURN_CODE);
+  cr_assert_eq(IntQueue_Peek(queue, NULL), ERR_RETURN_CODE);
 
   const int integersSize = INT16_MAX * 2;
-  int integers[integersSize];
+  IntQueueItem integers[integersSize];
 
   for (int i = 0, val = INT16_MIN; i < integersSize; i++, val++) {
     integers[i] = val;
-    IntQueue_Enqueue(queue, val);
+    cr_assert_eq(IntQueue_Enqueue(queue, val), SUCCESS_RETURN_CODE);
   }
 
+  IntQueueItem item;
   cr_assert(!IntQueue_IsEmpty(queue));
   cr_assert_eq(IntQueue_Size(queue), integersSize);
-  cr_assert_eq(IntQueue_Peek(queue), integers[0]);
+  cr_assert_eq(IntQueue_Peek(queue, &item), SUCCESS_RETURN_CODE);
+  cr_assert_eq(item, integers[0]);
 
-  IntQueueIter iterator = IntQueueIter_Create(queue);
-  cr_assert(iterator);
-  int expected, actual;
+  IntQueueItem expected, actual;
+  struct IntegerQueueIterator _iterator, *iterator = &_iterator;
+  IntQueueIter_Init(iterator, queue);
 
   for (int i = 0; i < integersSize; i++) {
     expected = integers[i];
     cr_assert(IntQueueIter_HasNext(iterator));
-
-    actual = IntQueueIter_GetNext(iterator);
-    cr_assert_eq(actual, expected, "Expected next integer to be %d, got %d",
+    cr_assert_eq(IntQueueIter_GetNext(iterator, &actual), SUCCESS_RETURN_CODE);
+    cr_assert_eq(expected, actual, "Expected next integer to be %lld, got %lld",
                  expected, actual);
   }
 
   cr_assert(!IntQueueIter_HasNext(iterator));
-  cr_assert_eq(IntQueueIter_GetNext(iterator), ERR_RETURN_CODE);
+  cr_assert_eq(IntQueueIter_GetNext(iterator, NULL), ERR_RETURN_CODE);
 
-  IntQueueIter_Free(&iterator);
+  IntQueueIter_Clear(iterator);
 }
 
 
@@ -113,7 +115,7 @@ Test(
 ) {
   cr_assert(IntQueue_IsEmpty(queue));
   cr_assert_eq(IntQueue_Size(queue), 0);
-  cr_assert_eq(IntQueue_Dequeue(queue), ERR_RETURN_CODE);
+  cr_assert_eq(IntQueue_Dequeue(queue, NULL), ERR_RETURN_CODE);
 
   IntQueue_Enqueue(queue,  -1);
   IntQueue_Enqueue(queue,   0);
@@ -122,25 +124,29 @@ Test(
   cr_assert(!IntQueue_IsEmpty(queue));
   cr_assert_eq(IntQueue_Size(queue), 3);
 
-  int dequeuedInt, expectedInt;
+  IntQueueItem actual, expected;
 
-  expectedInt = -1;
+  expected = -1;
   cr_assert(!IntQueue_IsEmpty(queue));
-  dequeuedInt = IntQueue_Dequeue(queue);
-  cr_assert_eq(dequeuedInt, expectedInt, "Expected %d to be dequeued, got %d",
-               expectedInt, dequeuedInt);
+  cr_assert_eq(IntQueue_Dequeue(queue, &actual), SUCCESS_RETURN_CODE);
+  cr_assert_eq(expected, actual, "Expected %lld to be dequeued, got %lld",
+               expected, actual);
 
-  expectedInt = 0;
+  expected = 0;
   cr_assert(!IntQueue_IsEmpty(queue));
-  dequeuedInt = IntQueue_Dequeue(queue);
-  cr_assert_eq(dequeuedInt, expectedInt, "Expected %d to be dequeued, got %d",
-               expectedInt, dequeuedInt);
+  cr_assert_eq(IntQueue_Dequeue(queue, &actual), SUCCESS_RETURN_CODE);
+  cr_assert_eq(expected, actual, "Expected %lld to be dequeued, got %lld",
+               expected, actual);
 
-  expectedInt = 1;
+  expected = 1;
   cr_assert(!IntQueue_IsEmpty(queue));
-  dequeuedInt = IntQueue_Dequeue(queue);
-  cr_assert_eq(dequeuedInt, expectedInt, "Expected %d to be dequeued, got %d",
-               expectedInt, dequeuedInt);
+  cr_assert_eq(IntQueue_Dequeue(queue, &actual), SUCCESS_RETURN_CODE);
+  cr_assert_eq(expected, actual, "Expected %lld to be dequeued, got %lld",
+               expected, actual);
+
+  cr_assert(IntQueue_IsEmpty(queue));
+  cr_assert_eq(IntQueue_Size(queue), 0);
+  cr_assert_eq(IntQueue_Dequeue(queue, NULL), ERR_RETURN_CODE);
 }
 
 
@@ -152,28 +158,31 @@ Test(
 ) {
   cr_assert(IntQueue_IsEmpty(queue));
   cr_assert_eq(IntQueue_Size(queue), 0);
-  cr_assert_eq(IntQueue_Dequeue(queue), ERR_RETURN_CODE);
+  cr_assert_eq(IntQueue_Dequeue(queue, NULL), ERR_RETURN_CODE);
 
   const int integersSize = INT16_MAX;
-  int integers[integersSize];
+  IntQueueItem integers[integersSize];
 
   for (int i = 0, val = INT16_MIN; i < integersSize; i++, val++) {
     integers[i] = val;
-    IntQueue_Enqueue(queue, val);
+    cr_assert_eq(IntQueue_Enqueue(queue, val), SUCCESS_RETURN_CODE);
   }
 
   cr_assert(!IntQueue_IsEmpty(queue));
   cr_assert_eq(IntQueue_Size(queue), integersSize);
 
-  int expected, actual;
+  IntQueueItem expected, actual;
 
   for (int i = 0; i < integersSize; i++) {
     expected = integers[i];
     cr_assert(!IntQueue_IsEmpty(queue));
-
-    actual = IntQueue_Dequeue(queue);
-    cr_assert_eq(actual, expected, "Expected %d to be dequeued, got %d",
+    cr_assert_eq(IntQueue_Dequeue(queue, &actual), SUCCESS_RETURN_CODE);
+    cr_assert_eq(expected, actual, "Expected %lld to be dequeued, got %lld",
                  expected, actual);
   }
+
+  cr_assert(IntQueue_IsEmpty(queue));
+  cr_assert_eq(IntQueue_Size(queue), 0);
+  cr_assert_eq(IntQueue_Dequeue(queue, NULL), ERR_RETURN_CODE);
 }
 

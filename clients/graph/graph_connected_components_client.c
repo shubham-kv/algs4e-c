@@ -87,22 +87,26 @@ int main(const int argc, const char *argv[]) {
   }
 
   for (int i = 0; i < n; i++) {
-    IntQueueIter iterator = IntQueueIter_Create(queues[i]);
+    IntQueueIterator iterator = IntQueueIter_Create(queues[i]);
     assert(iterator != NULL);
 
     while (IntQueueIter_HasNext(iterator)) {
-      int v = IntQueueIter_GetNext(iterator);
+      IntQueueItem v;
+      if (IntQueueIter_GetNext(iterator, &v) != 0) {
+        return -1;
+      }
+
       assert(v >= 0);
-      printf("%d ", v);
+      printf("%lld ", v);
     }
     printf("\n");
 
-    IntQueueIter_Free(&iterator);
+    IntQueueIter_Delete(&iterator);
   }
   printf("\n");
 
   for (int i = 0; i < n; i++) {
-    IntQueue_Free(&queues[i]);
+    IntQueue_Delete(&queues[i]);
   }
 
   GraphCC_Free(&graphCC);

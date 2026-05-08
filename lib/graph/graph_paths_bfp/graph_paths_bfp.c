@@ -16,14 +16,17 @@ struct BreadthFirstPaths {
 
 
 static int _breathFirstPaths(BFP bfp, const int s) {
-  IntQueue queue = IntQueue_Create();
-  if (IS_NULL(queue)) { return -1; }
+  struct IntegerQueue _queue, *queue = &_queue;
+  IntQueue_Init(queue);
 
   bfp->marked[s] = true;
   IntQueue_Enqueue(queue, s);
 
   while (!IntQueue_IsEmpty(queue)) {
-    const int v = IntQueue_Dequeue(queue);
+    IntQueueItem v;
+    if (IntQueue_Dequeue(queue, &v) != 0) {
+      return -1;
+    }
 
     AdjVertexIter iterator = AdjVertexIter_Create(bfp->graph, v);
 
@@ -41,7 +44,7 @@ static int _breathFirstPaths(BFP bfp, const int s) {
     AdjVertexIter_Free(&iterator);
   }
 
-  IntQueue_Free(&queue);
+  IntQueue_Clear(queue);
   return 0;
 }
 
