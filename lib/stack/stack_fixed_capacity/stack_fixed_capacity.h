@@ -1,19 +1,23 @@
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #ifndef __fixed_capacity_stack_h
 #define __fixed_capacity_stack_h
 
+struct FixedCapacityStack;
+struct FCStackIterator;
+
 typedef const void *Item;
+typedef struct FixedCapacityStack *Stack;
+typedef struct FCStackIterator *StackIterator;
 
 struct FixedCapacityStack {
   size_t capacity;
   size_t size;
   Item *items;
 };
-typedef struct FixedCapacityStack *Stack;
 
-void Stack_Init(Stack stack, uint32_t capacity);
+void Stack_Init(Stack stack, size_t capacity);
 void Stack_Clear(Stack stack);
 
 void Stack_Push(Stack stack, Item item);
@@ -26,12 +30,10 @@ struct FCStackIterator {
   Stack stack;
   size_t i;
 };
-typedef struct FCStackIterator *StackIterator;
 
 void StackIterator_Init(StackIterator iterator, Stack stack);
 void StackIterator_Clear(StackIterator iterator);
 bool StackIterator_HasNext(StackIterator iterator);
 Item StackIterator_GetNext(StackIterator iterator);
 
-#endif  // __fixed_capacity_stack_h
-
+#endif // __fixed_capacity_stack_h
