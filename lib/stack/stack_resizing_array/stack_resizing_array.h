@@ -1,17 +1,21 @@
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #ifndef __resizing_array_stack_h
 #define __resizing_array_stack_h
 
+struct ResizingArrayStack;
+struct RAStackIterator;
+
 typedef const void *Item;
+typedef struct ResizingArrayStack *Stack;
+typedef struct RAStackIterator *StackIterator;
 
 struct ResizingArrayStack {
   size_t capacity;
   size_t size;
   Item *items;
 };
-typedef struct ResizingArrayStack *Stack;
 
 void Stack_Init(Stack stack);
 void Stack_Clear(Stack stack);
@@ -26,12 +30,10 @@ struct RAStackIterator {
   struct ResizingArrayStack *stack;
   size_t i;
 };
-typedef struct RAStackIterator *StackIterator;
 
 void StackIterator_Init(StackIterator iterator, Stack stack);
 void StackIterator_Clear(StackIterator iterator);
 bool StackIterator_HasNext(StackIterator iterator);
 Item StackIterator_GetNext(StackIterator iterator);
 
-#endif  // __resizing_array_stack_h
-
+#endif // __resizing_array_stack_h
