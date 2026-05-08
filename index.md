@@ -1,23 +1,17 @@
-- [Ch. 1. Fundamentals](#ch-1-fundamentals)
-  - [1.3 Bags, Queues \& Stacks](#13-bags-queues--stacks)
-  - [1.5 Union find](#15-union-find)
-- [Ch. 2. Sorting](#ch-2-sorting)
-  - [2.1 Elementary Sorts](#21-elementary-sorts)
-  - [2.2 Mergesort](#22-mergesort)
-  - [2.3 Quicksort](#23-quicksort)
-  - [2.4 Priority Queues](#24-priority-queues)
-- [Ch. 4. Graphs](#ch-4-graphs)
-  - [4.1 Undirected Graphs](#41-undirected-graphs)
-
 ### Ch. 1. Fundamentals
 
 #### 1.3 Bags, Queues & Stacks
 
-1. [Stack (Fixed Capacity)](./lib/stack/stack_fixed_capacity/stack_fixed_capacity.c)
-1. [Stack (Resizing Array)](./lib/stack/stack_resizing_array/stack_resizing_array.c)
-1. [Stack (Linked List)](./lib/stack/stack_linked/stack_linked.c)
-1. [Queue (Linked List)](./lib/queue/queue_linked/queue_linked_list.c)
-1. [Bag (Linked List)](./lib/bag/bag_linked/bag_linked.c)
+1. [stack_fixed_capacity.c](./lib/stack/stack_fixed_capacity/stack_fixed_capacity.c),
+   [stack_fixed_capacity.h](./lib/stack/stack_fixed_capacity/stack_fixed_capacity.h)
+1. [stack_resizing_array.c](./lib/stack/stack_resizing_array/stack_resizing_array.c),
+   [stack_resizing_array.h](./lib/stack/stack_resizing_array/stack_resizing_array.h)
+1. [stack_linked.c](./lib/stack/stack_linked/stack_linked.c),
+   [stack_linked.h](./lib/stack/stack_linked/stack_linked.h)
+1. [queue_linked_list.c](./lib/queue/queue_linked/queue_linked_list.c),
+   [queue_linked_list.h](./lib/queue/queue_linked/queue_linked_list.h)
+1. [bag_linked.c](./lib/queue/bag_linked/bag_linked.c),
+   [bag_linked.h](./lib/queue/bag_linked/bag_linked.h)
 
 #### 1.5 Union find
 
