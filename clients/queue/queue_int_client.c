@@ -23,7 +23,7 @@ int main() {
 
   char buffer[BUFFER_SIZE];
   struct IntegerQueue _queue, *queue = &_queue;
-  IntQueue_Init(queue);
+  ENSURE_CALL_SUCCESS(IntQueue_Init(queue));
 
   while (fscanf(stdin, "%63s", buffer) != EOF) {
     if (strncmp(buffer, "x\0", 2) == 0) {
@@ -35,8 +35,7 @@ int main() {
       }
 
       IntQueueItem integer;
-      const int code = IntQueue_Dequeue(queue, &integer);
-      if (code != SUCCESS) { return code; }
+      ENSURE_CALL_SUCCESS(IntQueue_Dequeue(queue, &integer));
       printf("dequeue() = %lld\n", integer);
 
     } else {
@@ -44,11 +43,10 @@ int main() {
       IntQueueItem integer = (IntQueueItem)strtol(buffer, &end, 10);
       if (end == buffer) {
         fprintf(stderr, "Invalid input!\n");
-        return ERROR;
+        return EXIT_FAILURE;
       }
 
-      const int code = IntQueue_Enqueue(queue, integer);
-      if (code != SUCCESS) { return code; }
+      ENSURE_CALL_SUCCESS(IntQueue_Enqueue(queue, integer));
       printf("enqueue(%lld)\n", integer);
     }
 
@@ -64,23 +62,22 @@ int main() {
   printf("size() = %d\n", IntQueue_Size(queue));
 
   if (!isQueueEmpty) {
-    code = IntQueue_Peek(queue, &integer);
-    if (code != SUCCESS) { return code; }
+    ENSURE_CALL_SUCCESS(IntQueue_Peek(queue, &integer));
     printf("peek() = %lld\n", integer);
   }
 
   struct IntegerQueueIterator _iterator, *iterator = &_iterator;
-  IntQueueIter_Init(iterator, queue);
+  ENSURE_CALL_SUCCESS(IntQueueIter_Init(iterator, queue));
 
   while (IntQueueIter_HasNext(iterator)) {
-    code = IntQueueIter_GetNext(iterator, &integer);
-    if (code != SUCCESS) { return code; }
+    ENSURE_CALL_SUCCESS(IntQueueIter_GetNext(iterator, &integer));
     printf("iterator_next() = %lld\n", integer);
   }
   printf("\n");
 
-  IntQueueIter_Clear(iterator);
-  IntQueue_Clear(queue), (queue = NULL);
+  ENSURE_CALL_SUCCESS(IntQueueIter_Clear(iterator));
+  ENSURE_CALL_SUCCESS(IntQueue_Clear(queue));
+  queue = NULL;
 
-  return SUCCESS;
+  return EXIT_SUCCESS;
 }

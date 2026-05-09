@@ -25,9 +25,9 @@ struct IntegerQueue {
 };
 
 QUEUE IntQueue_Create();
- void IntQueue_Init(QUEUE queue);
- void IntQueue_Clear(QUEUE queue);
- void IntQueue_Delete(QUEUE *queue);
+  int IntQueue_Init(QUEUE queue);
+  int IntQueue_Clear(QUEUE queue);
+  int IntQueue_Delete(QUEUE *queue);
   int IntQueue_Enqueue(QUEUE queue, ITEM item);
   int IntQueue_Dequeue(QUEUE queue, ITEM *out);
   int IntQueue_Peek(QUEUE queue, ITEM *out);
@@ -39,9 +39,9 @@ struct IntegerQueueIterator {
 };
 
 ITER IntQueueIter_Create(QUEUE queue);
-void IntQueueIter_Init(ITER iterator, QUEUE queue);
-void IntQueueIter_Clear(ITER iterator);
-void IntQueueIter_Delete(ITER *iterator);
+ int IntQueueIter_Init(ITER iterator, QUEUE queue);
+ int IntQueueIter_Clear(ITER iterator);
+ int IntQueueIter_Delete(ITER *iterator);
 bool IntQueueIter_HasNext(ITER iterator);
  int IntQueueIter_GetNext(ITER iterator, ITEM *out);
 
