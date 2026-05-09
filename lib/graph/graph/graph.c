@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "graph.h"
-#include "bag_linked_int.h"
+#include "bag_int.h"
 #include "common_macros.h"
 
 struct AdjListsGraph {
-  Bag *adjList;
+  IntBag *adjList;
   int vertices;
   int edges;
 };
@@ -16,14 +16,12 @@ Graph Graph_Create(const int V) {
   if (IS_NULL(graph)) { errno = ENOMEM; return NULL; }
 
   graph->vertices = V;
-  graph->adjList = calloc(V, sizeof(Bag *));
+  graph->adjList = calloc(V, sizeof(*graph->adjList));
   graph->edges = 0;
 
   for (int v = 0; v < graph->vertices; v++) {
-    Bag bag = Bag_Alloc();
+    IntBag bag = IntBag_Create();
     if (IS_NULL(bag)) { errno = ENOMEM; return NULL; }
-
-    Bag_Init(bag);
     graph->adjList[v] = bag;
   }
 
@@ -58,7 +56,7 @@ void Graph_Free(Graph *graph) {
     const int vertices = (*graph)->vertices;
 
     for (int v = 0; v < vertices; v++) {
-      Bag_Free((*graph)->adjList[v]), ((*graph)->adjList[v] = NULL);
+      IntBag_Delete(&(*graph)->adjList[v]), ((*graph)->adjList[v] = NULL);
     }
 
     free((*graph)->adjList), ((*graph)->adjList = NULL);
@@ -80,8 +78,8 @@ void Graph_AddEdge(Graph graph, const int v, const int w) {
   if (!(0 <= v && v < graph->vertices)) { errno = ERANGE; return; }
   if (!(0 <= w && w < graph->vertices)) { errno = ERANGE; return; }
 
-  Bag_Add(graph->adjList[v], w);
-  Bag_Add(graph->adjList[w], v);
+  IntBag_Add(graph->adjList[v], w);
+  IntBag_Add(graph->adjList[w], v);
   graph->edges++;
 }
 
@@ -89,7 +87,7 @@ void Graph_AddEdge(Graph graph, const int v, const int w) {
 struct AdjVertexIterator {
   Graph graph;
   int v;
-  BagIterator bagIterator;
+  IntBagIterator bagIterator;
 };
 
 #define ITER AdjVertexIter
@@ -100,10 +98,8 @@ ITER AdjVertexIter_Create(Graph graph, const int v) {
 
   iter->graph = graph;
   iter->v = v;
-  iter->bagIterator = BagIterator_Alloc();
+  iter->bagIterator = IntBagIter_Create(graph->adjList[v]);
   if (IS_NULL(iter->bagIterator)) { errno = ENOMEM; return NULL; }
-
-  BagIterator_Init(iter->bagIterator, graph->adjList[v]);
 
   return iter;
 }
@@ -112,18 +108,18 @@ void AdjVertexIter_Free(ITER *iter) {
   if (IS_NULL(iter) || IS_NULL(*iter)) { return; }
 
   if ((*iter)->bagIterator) {
-    BagIterator_Free((*iter)->bagIterator), ((*iter)->bagIterator = NULL);
+    IntBagIter_Delete(&(*iter)->bagIterator), ((*iter)->bagIterator = NULL);
   }
 
   free(*iter), (*iter = NULL);
 }
 
 inline bool AdjVertexIter_HasNext(ITER iter) {
-  return BagIterator_HasNext(iter->bagIterator);
+  return IntBagIter_HasNext(iter->bagIterator);
 }
 
 inline int AdjVertexIter_GetNext(ITER iter, int *outV) {
-  return BagIterator_GetNext(iter->bagIterator, outV);
+  return IntBagIter_GetNext(iter->bagIterator, (IntBagItem *) outV);
 }
 
 #undef ITER
