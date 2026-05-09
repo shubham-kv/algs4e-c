@@ -1,35 +1,47 @@
 #include <stdbool.h>
 
-#ifndef __bag_linked_h
-#define __bag_linked_h
+#ifndef __linked_bag_h
+#define __linked_bag_h
+
+struct LinkedBagNode;
+struct LinkedBag;
+struct LinkedBagIterator;
 
 typedef const void *BagItem;
+typedef struct LinkedBagNode *BagNode;
+typedef struct LinkedBag *Bag;
+typedef struct LinkedBagIterator *BagIterator;
 
-struct BagNode;
-struct LinkedListBag;
+#define BAG Bag
+#define ITEM BagItem
+#define ITER BagIterator
 
-struct LinkedListBag {
-  struct BagNode *first;
+struct LinkedBag {
+  struct LinkedBagNode *first;
   int size;
 };
-typedef struct LinkedListBag *Bag;
 
-void Bag_Init(Bag bag);
-void Bag_Clear(Bag bag);
-void Bag_Add(Bag bag, BagItem item);
- int Bag_Size(Bag bag);
-bool Bag_IsEmpty(Bag bag);
+ BAG Bag_Create();
+ int Bag_Init(BAG bag);
+ int Bag_Clear(BAG bag);
+ int Bag_Delete(BAG *bag);
+ int Bag_Add(BAG bag, ITEM item);
+ int Bag_Size(BAG bag);
+bool Bag_IsEmpty(BAG bag);
 
-struct LLBagIterator {
-  struct LinkedListBag *bag;
-  struct BagNode *cur;
+struct LinkedBagIterator {
+  struct LinkedBagNode *cur;
 };
-typedef struct LLBagIterator *BagIterator;
 
-void BagIterator_Init(BagIterator iterator, Bag bag);
-void BagIterator_Clear(BagIterator iterator);
-bool BagIterator_HasNext(BagIterator iterator);
-BagItem BagIterator_GetNext(BagIterator iterator);
+ITER BagIterator_Create(BAG bag);
+ int BagIterator_Init(ITER iterator, BAG bag);
+ int BagIterator_Clear(ITER iterator);
+ int BagIterator_Delete(ITER *iterator);
+bool BagIterator_HasNext(ITER iterator);
+ int BagIterator_GetNext(ITER iterator, ITEM *out);
 
-#endif // __bag_linked_h
+#undef BAG
+#undef ITEM
+#undef ITER
 
+#endif // __linked_bag_h

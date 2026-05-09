@@ -1,9 +1,10 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "bag_linked.h"
+#include "common_macros.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#define BUFFER_SIZE 16
+#define BUFFER_SIZE 32
 
 /**
  * ### Compile
@@ -16,44 +17,50 @@
  *
  */
 int main() {
-  struct LinkedListBag _bag, *bag = &_bag;
-  Bag_Init(bag);
+  printf("** LinkedBag **\n");
+  printf("===============\n");
+  printf("\n");
 
   char buffer[BUFFER_SIZE];
-  printf("** Bag (Linked List) **\n");
-  printf("\n");
+  struct LinkedBag _bag, *bag = &_bag;
+  ENSURE_CALL_SUCCESS(Bag_Init(bag));
 
-  while (fscanf(stdin, "%15s", buffer) != EOF) {
+  while (fscanf(stdin, "%31s", buffer) != EOF) {
     if (strncmp(buffer, "x\0", 2) == 0) {
       break;
-    }
+    } else {
+      size_t bufLen = strlen(buffer);
+      char *str = calloc(bufLen + 1, sizeof(char));
+      snprintf(str, bufLen + 1, "%s", buffer);
 
-    size_t bufLen = strlen(buffer);
-    char *str = calloc(bufLen + 1, sizeof(char));
-    snprintf(str, bufLen + 1, "%s", buffer);
-    Bag_Add(bag, str);
-    printf("add(%s)\n", str);
+      ENSURE_CALL_SUCCESS(Bag_Add(bag, str));
+      printf("add(\"%s\")\n", str);
+    }
   }
 
   printf("\n");
-  printf("is_empty() = %s\n", Bag_IsEmpty(bag) ? "true" : "false");
+  printf("isEmpty() = %s\n", Bag_IsEmpty(bag) ? "true" : "false");
   printf("size() = %d\n", Bag_Size(bag));
 
-  struct LLBagIterator _iterator, *iterator = &_iterator;
-  BagIterator_Init(iterator, bag);
+  BagItem bagItem;
+  struct LinkedBagIterator _iterator, *iterator = &_iterator;
+  ENSURE_CALL_SUCCESS(BagIterator_Init(iterator, bag));
 
   while (BagIterator_HasNext(iterator)) {
-    char *str = (char *) BagIterator_GetNext(iterator);
-    printf("iterator_next() = %s\n", str);
-    free(str), (str = NULL);
+    ENSURE_CALL_SUCCESS(BagIterator_GetNext(iterator, &bagItem));
+    char *str = (char *)bagItem;
+    printf("iterator_next() = \"%s\"\n", str);
+    free(str), (str = NULL), (bagItem = NULL);
   }
   printf("\n");
 
-  BagIterator_Clear(iterator), (iterator = NULL);
-  Bag_Clear(bag), (bag = NULL);
+  ENSURE_CALL_SUCCESS(BagIterator_Clear(iterator));
+  iterator = NULL;
 
-  return 0;
+  ENSURE_CALL_SUCCESS(Bag_Clear(bag));
+  bag = NULL;
+
+  return EXIT_SUCCESS;
 }
 
 #undef BUFFER_SIZE
-
