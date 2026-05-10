@@ -3,3 +3,6 @@ target_link_libraries(test_stack_fixed_capacity PRIVATE stack_fixed_capacity)
 
 add_criterion_test(test_stack_int test_stack_int.c)
 target_link_libraries(test_stack_int PRIVATE stack_int)
+
+add_criterion_test(test_stack_resizing_array test_stack_resizing_array.c)
+target_link_libraries(test_stack_resizing_array PRIVATE stack_resizing_array)
