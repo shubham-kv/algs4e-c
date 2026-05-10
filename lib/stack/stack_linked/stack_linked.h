@@ -6,11 +6,11 @@
 
 struct StackNode;
 struct LinkedStack;
-struct LLStackIterator;
+struct LinkedStackIterator;
 
 typedef const void *Item;
 typedef struct LinkedStack *Stack;
-typedef struct LLStackIterator *StackIterator;
+typedef struct LinkedStackIterator *StackIterator;
 
 struct LinkedStack {
   struct StackNode *top;
@@ -26,7 +26,7 @@ Item Stack_Peek(Stack stack);
  int Stack_Size(Stack stack);
 bool Stack_IsEmpty(Stack stack);
 
-struct LLStackIterator {
+struct LinkedStackIterator {
   struct StackNode *cur;
 };
 

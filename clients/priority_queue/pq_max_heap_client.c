@@ -72,7 +72,7 @@ int main(int argc, const char *argv[]) {
 
   printf("Smallest %d integers from total %d integers\n", k, i);
 
-  struct LLStackIterator _iterator, *iterator = &_iterator;
+  struct LinkedStackIterator _iterator, *iterator = &_iterator;
   StackIterator_Init(iterator, stack);
 
   while (StackIterator_HasNext(iterator)) {

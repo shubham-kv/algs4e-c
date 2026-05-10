@@ -53,7 +53,7 @@ int main() {
   printf("size() = %d\n", Stack_Size(stack));
   printf("peek() = %s\n", (char *)Stack_Peek(stack));
 
-  struct LLStackIterator _iterator, *iterator = &_iterator;
+  struct LinkedStackIterator _iterator, *iterator = &_iterator;
   StackIterator_Init(iterator, stack);
 
   while (StackIterator_HasNext(iterator)) {
