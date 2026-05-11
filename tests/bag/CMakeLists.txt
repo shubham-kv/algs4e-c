@@ -1,0 +1,2 @@
+add_criterion_test(test_bag_linked test_bag_linked.c)
+target_link_libraries(test_bag_linked PRIVATE bag_linked)
