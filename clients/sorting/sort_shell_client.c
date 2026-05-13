@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "common_macros.h"
 #include "sort_shell.h"
 
 int charCmp(const void *a, const void *b);
@@ -21,18 +23,20 @@ int main() {
   size_t n = strlen(str);
 
   printf("** Shell Sort **\n");
+  printf("================\n");
+
   printf("Before: ");
   printChars(str, n);
   printf("\n");
 
-  shellSort(str, sizeof(char), n, charCmp);
+  ENSURE_CALL_SUCCESS(Sort_Shell(str, sizeof(char), n, charCmp));
 
   printf(" After: ");
   printChars(str, n);
   printf("\n");
   printf("\n");
 
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int charCmp(const void *a, const void *b) {
@@ -48,4 +52,3 @@ void printChars(char *str, size_t n) {
   }
   printf(" }");
 }
-
