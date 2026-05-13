@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "common_macros.h"
 #include "sort_merge_top_down.h"
 
 int charCmp(const void *a, const void *b);
@@ -21,16 +23,20 @@ int main() {
   size_t n = strlen(str);
 
   printf("** Merge Sort (Top Down) **\n");
+  printf("===========================\n");
+
   printf("Before: ");
   printChars(str, n);
   printf("\n");
 
-  topDownMergeSort(str, sizeof(char), n, charCmp);
+  ENSURE_CALL_SUCCESS(Sort_MergeTopDown(str, sizeof(char), n, charCmp));
 
   printf(" After: ");
   printChars(str, n);
   printf("\n");
   printf("\n");
+
+  return EXIT_SUCCESS;
 }
 
 int charCmp(const void *a, const void *b) {
@@ -46,4 +52,3 @@ void printChars(char *str, size_t n) {
   }
   printf(" }");
 }
-
