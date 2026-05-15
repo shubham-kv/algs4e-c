@@ -1,0 +1,2 @@
+add_criterion_test(test_st_sequential_search test_st_sequential_search.c)
+target_link_libraries(test_st_sequential_search PRIVATE st_sequential_search)
