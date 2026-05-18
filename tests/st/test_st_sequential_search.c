@@ -1,6 +1,9 @@
 #include <criterion/criterion.h>
 
+#include "arr_utils.h"
+#include "comparators.h"
 #include "st_sequential_search.h"
+#include "test_utils.h"
 
 static SSST st = NULL;
 
@@ -91,10 +94,26 @@ Test(
 
   int i;
   SSSTKey stKey;
+  int keyIndices[n]; // Indices of the returned key in the original array
+
   for (i = 0; SSSTKeysIter_HasNext(keysIterator); i++) {
-    cr_assert_eq(SSSTKeysIter_GetNext(keysIterator, &stKey), EXIT_SUCCESS);
+    const int code = SSSTKeysIter_GetNext(keysIterator, &stKey);
+    const int key = *((int *)stKey);
+    const int keyIndex = Search_Binary(keys, n, key);
+    keyIndices[i] = keyIndex;
+
+    cr_assert_eq(code, EXIT_SUCCESS);
+
+    // Expect key to exist in original keys array
+    cr_expect_eq(0 <= keyIndex && keyIndex < n, true); 
     cr_expect_eq(SSST_Contains(st, stKey), true);
   }
+
+  const bool hasDuplicateKeys = ArrUtils_ContainsDuplicates(keyIndices,
+      sizeof(keyIndices[0]), n, CMP_Int);
+
+  // Returned keys must be unique
+  cr_expect_eq(hasDuplicateKeys, false);
   cr_expect_eq(i, n);
 
   cr_assert_eq(SSSTKeysIter_Delete(&keysIterator), EXIT_SUCCESS);
