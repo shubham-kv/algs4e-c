@@ -5,14 +5,14 @@
 #include "common_macros.h"
 #include "linked_node.h"
 
-int LinkedNodeIter_Init(LinkedNodeIter iterator, NODE node) {
+int LinkedNodeIter_Init(LinkedNodeIter iterator, LinkedNode node) {
   REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
   iterator->cur = node;
   return EXIT_SUCCESS;
 }
 
 LinkedNodeIter LinkedNodeIter_Create(LinkedNode node) {
-  LinkedNodeIter iterator = calloc(1, sizeof(*node));
+  LinkedNodeIter iterator = calloc(1, sizeof(*iterator));
   REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, NULL);
   LinkedNodeIter_Init(iterator, node);
   return iterator;

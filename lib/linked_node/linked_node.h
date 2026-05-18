@@ -27,6 +27,7 @@ ITER LinkedNodeIter_Create(NODE node);
 bool LinkedNodeIter_HasNext(ITER iterator);
  int LinkedNodeIter_GetNext(ITER iterator, NODE *out);
 
+#undef NODE
 #undef ITER
 
 #endif // __linked_node_h
