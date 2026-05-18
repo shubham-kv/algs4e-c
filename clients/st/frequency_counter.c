@@ -8,40 +8,36 @@
 
 #define BUFFER_LENGTH 64
 
-void printHelp(FILE *stream, const char *programName) {
-  char *thresholdLengthArgName = "threshold";
+static void _printHelp(FILE *stream, const char *programName);
+static int _stringComparator(const void *a, const void *b);
 
-  fprintf(stream, "\n");
-  fprintf(stream,
-          "Finds the word no shorter than <%s> which occurs most frequently in "
-          "a given text.\n",
-          thresholdLengthArgName);
-  fprintf(stream, "\n");
-  fprintf(stream, "Usage: %s <%s>\n", programName, thresholdLengthArgName);
-  fprintf(stream, "\n");
-  fprintf(stream, "Arguments:\n");
-  fprintf(stream, "%-15s %s\n", thresholdLengthArgName,
-          "Integer specifying the minimum threshold length of word to count");
-  fprintf(stream, "\n");
-}
-
+/**
+ * ### Compile
+ * % cmake -S . -B build
+ * % make -C build frequency_counter
+ *
+ * ### Run
+ * % echo "hello hello foo bar baz bar bar bin foo" > input.txt
+ * % ./build/bin/frequency_counter 2 < input.txt
+ *
+ */
 int main(int argc, char const *argv[]) {
   if (argc != 2) {
-    printHelp(stderr, argv[0]);
+    _printHelp(stderr, argv[0]);
     return EXIT_FAILURE;
   }
 
   char *end;
   const int threshold = (int) strtol(argv[1], &end, 10);
   if (end == argv[1]) {
-    printHelp(stderr, argv[0]);
+    _printHelp(stderr, argv[0]);
     return EXIT_FAILURE;
   }
 
   char buffer[BUFFER_LENGTH];
   memset(buffer, 0, BUFFER_LENGTH);
 
-  SSST wordCountST = SSST_Create();
+  SSST wordCountST = SSST_Create(_stringComparator);
   REQUIRE_TRUE(IS_NOT_NULL(wordCountST), ENOMEM, EXIT_FAILURE);
 
   // Put the word (above a given threshold) and it's count into the ST
@@ -122,4 +118,27 @@ int main(int argc, char const *argv[]) {
   ENSURE_CALL_SUCCESS(SSST_Delete(&wordCountST));
 
   return EXIT_SUCCESS;
+}
+
+static void _printHelp(FILE *stream, const char *programName) {
+  char *thresholdLengthArgName = "threshold";
+
+  fprintf(stream, "\n");
+  fprintf(stream,
+          "Finds the word no shorter than <%s> which occurs most frequently in "
+          "a given text.\n",
+          thresholdLengthArgName);
+  fprintf(stream, "\n");
+  fprintf(stream, "Usage: %s <%s>\n", programName, thresholdLengthArgName);
+  fprintf(stream, "\n");
+  fprintf(stream, "Arguments:\n");
+  fprintf(stream, "%-15s %s\n", thresholdLengthArgName,
+          "Integer specifying the minimum threshold length of word to count");
+  fprintf(stream, "\n");
+}
+
+static int _stringComparator(const void *_a, const void *_b) {
+  const char *a = (const char *)_a;
+  const char *b = (const char *)_b;
+  return strcmp(a, b);
 }
