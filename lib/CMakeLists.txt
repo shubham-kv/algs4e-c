@@ -6,6 +6,7 @@ foreach(dir ${CHILD_DIRS})
   endif()
 endforeach()
 
-add_library(std_random SHARED std_random.c)
 add_library(arr_utils SHARED arr_utils.c)
+add_library(comparators SHARED comparators.c)
+add_library(std_random SHARED std_random.c)
 
