@@ -1,12 +1,14 @@
-#include "stack_int.h"
-#include "common_macros.h"
 #include <errno.h>
 #include <memory.h>
 #include <stdlib.h>
 
+#include "common_macros.h"
+#include "linked_node.h"
+#include "stack_int.h"
+
 struct IntegerStackNode {
-  IntStackItem item;
   struct IntegerStackNode *next;
+  IntStackItem item;
 };
 
 IntStack IntStack_Create() {
@@ -87,46 +89,40 @@ inline bool IntStack_IsEmpty(IntStack stack) {
   return IntStack_Size(stack) == 0;
 }
 
-IntStackIterator IntStackIter_Create(IntStack stack) {
-  REQUIRE_TRUE(IS_NOT_NULL(stack), EINVAL, NULL);
-
-  IntStackIterator iterator = calloc(1, sizeof(*iterator));
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, NULL);
-
-  IntStackIter_Init(iterator, stack);
-  return iterator;
+inline int IntStackIter_Init(IntStackIterator iterator, IntStack stack) {
+  REQUIRE_TRUE(IS_NOT_NULL(stack), EINVAL, EXIT_FAILURE);
+  return LinkedNodeIter_Init((LinkedNodeIter)iterator, (LinkedNode)stack->top);
 }
 
-inline int IntStackIter_Init(IntStackIterator iterator, IntStack stack) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
-  REQUIRE_TRUE(IS_NOT_NULL(stack), EINVAL, EXIT_FAILURE);
-  iterator->cur = stack->top;
-  return EXIT_SUCCESS;
+IntStackIterator IntStackIter_Create(IntStack stack) {
+  REQUIRE_TRUE(IS_NOT_NULL(stack), EINVAL, NULL);
+  return (IntStackIterator)LinkedNodeIter_Create((LinkedNode)stack->top);
 }
 
 inline int IntStackIter_Clear(IntStackIterator iterator) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
-  memset(iterator, 0, sizeof(*iterator));
-  return EXIT_SUCCESS;
+  return LinkedNodeIter_Clear((LinkedNodeIter)iterator);
 }
 
 inline int IntStackIter_Delete(IntStackIterator *iterator) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator) && IS_NOT_NULL(*iterator), EINVAL,
-               EXIT_FAILURE);
-  IntStackIter_Clear(*iterator);
-  free(*iterator), (*iterator = NULL);
-  return EXIT_SUCCESS;
+  return LinkedNodeIter_Delete((LinkedNodeIter *)iterator);
 }
 
 inline bool IntStackIter_HasNext(IntStackIterator iterator) {
-  return IS_NOT_NULL(iterator->cur);
+  return LinkedNodeIter_HasNext((LinkedNodeIter)iterator);
 }
 
 int IntStackIter_GetNext(IntStackIterator iterator, IntStackItem *out) {
   REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
-  REQUIRE_TRUE(IS_NOT_NULL(iterator->cur), ENODATA, EXIT_FAILURE);
-  *out = iterator->cur->item;
-  iterator->cur = iterator->cur->next;
+
+  IntStackNode cur;
+  const int code =
+      LinkedNodeIter_GetNext((LinkedNodeIter)iterator, (LinkedNode *)&cur);
+
+  if (code != EXIT_SUCCESS) {
+    return EXIT_FAILURE;
+  }
+
+  *out = cur->item;
   return EXIT_SUCCESS;
 }
