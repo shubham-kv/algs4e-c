@@ -1,0 +1,2 @@
+add_executable(frequency_counter frequency_counter.c)
+target_link_libraries(frequency_counter PRIVATE st_sequential_search)
