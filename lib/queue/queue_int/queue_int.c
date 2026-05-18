@@ -1,18 +1,19 @@
-#include "queue_int.h"
-#include "common_macros.h"
 #include <errno.h>
 #include <memory.h>
 #include <stdlib.h>
 
+#include "common_macros.h"
+#include "linked_node.h"
+#include "queue_int.h"
+
 struct IntegerQueueNode {
-  IntQueueItem item;
   struct IntegerQueueNode *next;
+  IntQueueItem item;
 };
 
 IntQueue IntQueue_Create() {
   IntQueue queue = calloc(1, sizeof(*queue));
   REQUIRE_TRUE(IS_NOT_NULL(queue), ENOMEM, NULL);
-
   IntQueue_Init(queue);
   return queue;
 }
@@ -97,47 +98,41 @@ inline bool IntQueue_IsEmpty(IntQueue queue) {
   return IntQueue_Size(queue) == 0;
 }
 
-IntQueueIterator IntQueueIter_Create(IntQueue queue) {
-  REQUIRE_TRUE(IS_NOT_NULL(queue), EINVAL, NULL);
-
-  IntQueueIterator iterator = calloc(1, sizeof(*iterator));
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, NULL);
-
-  IntQueueIter_Init(iterator, queue);
-  return iterator;
+int IntQueueIter_Init(IntQueueIterator iterator, IntQueue queue) {
+  REQUIRE_TRUE(IS_NOT_NULL(queue), EINVAL, EXIT_FAILURE);
+  return LinkedNodeIter_Init((LinkedNodeIter)iterator,
+                             (LinkedNode)queue->first);
 }
 
-inline int IntQueueIter_Init(IntQueueIterator iterator, IntQueue queue) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
-  REQUIRE_TRUE(IS_NOT_NULL(queue), EINVAL, EXIT_FAILURE);
-  iterator->cur = queue->first;
-  return EXIT_SUCCESS;
+IntQueueIterator IntQueueIter_Create(IntQueue queue) {
+  REQUIRE_TRUE(IS_NOT_NULL(queue), EINVAL, NULL);
+  return (IntQueueIterator)LinkedNodeIter_Create((LinkedNode)queue->first);
 }
 
 inline int IntQueueIter_Clear(IntQueueIterator iterator) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
-  memset(iterator, 0, sizeof(*iterator));
-  return EXIT_SUCCESS;
+  return LinkedNodeIter_Clear((LinkedNodeIter)iterator);
 }
 
-int IntQueueIter_Delete(IntQueueIterator *iterator) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator) && IS_NOT_NULL(*iterator), EINVAL,
-               EXIT_FAILURE);
-
-  IntQueueIter_Clear(*iterator);
-  free(*iterator), (*iterator = NULL);
-  return EXIT_SUCCESS;
+inline int IntQueueIter_Delete(IntQueueIterator *iterator) {
+  return LinkedNodeIter_Delete((LinkedNodeIter *)iterator);
 }
 
 inline bool IntQueueIter_HasNext(IntQueueIterator iterator) {
-  return IS_NOT_NULL(iterator->cur);
+  return LinkedNodeIter_HasNext((LinkedNodeIter)iterator);
 }
 
 int IntQueueIter_GetNext(IntQueueIterator iterator, IntQueueItem *out) {
   REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
-  REQUIRE_TRUE(IS_NOT_NULL(iterator->cur), ENODATA, EXIT_FAILURE);
-  *out = iterator->cur->item;
-  iterator->cur = iterator->cur->next;
+
+  IntQueueNode cur;
+  const int code =
+      LinkedNodeIter_GetNext((LinkedNodeIter)iterator, (LinkedNode *)&cur);
+
+  if (code != EXIT_SUCCESS) {
+    return EXIT_FAILURE;
+  }
+
+  *out = cur->item;
   return EXIT_SUCCESS;
 }
