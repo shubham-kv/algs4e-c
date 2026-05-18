@@ -1,9 +1,9 @@
-#include "bag_linked.h"
 #include <criterion/criterion.h>
 
-// Utilities
-int binarySearch(const int arr[], const int n, const int target);
-bool containsDuplicates(const int arr[], const int n);
+#include "arr_utils.h"
+#include "bag_linked.h"
+#include "comparators.h"
+#include "test_utils.h"
 
 static Bag bag;
 
@@ -92,7 +92,7 @@ Test(
     cr_expect_eq(BagIterator_GetNext(iterator, &bagItem), EXIT_SUCCESS);
 
     bagItemAsInt = *((int *) bagItem);
-    bagItemIndex = binarySearch(originalArr, n, bagItemAsInt);
+    bagItemIndex = Search_Binary(originalArr, n, bagItemAsInt);
     bagItemIndices[i] = bagItemIndex; // Save the index to indices array
 
     // Expect item to exist in our original array
@@ -100,39 +100,11 @@ Test(
   }
 
   // Expect iterator to not yield any duplicates
-  cr_expect_eq(containsDuplicates(bagItemIndices, n), false);
+  const bool containsDuplicates = ArrUtils_ContainsDuplicates(bagItemIndices,
+      sizeof(bagItemIndices[0]), n, CMP_Int);
+
+  cr_expect_eq(containsDuplicates, false);
   cr_expect_eq(i, n); // Expect all items to be consumed
 
   cr_assert_eq(BagIterator_Delete(&iterator), EXIT_SUCCESS);
-}
-
-
-// Quick Utility deifinitions
-// ==========================
-
-int binarySearch(const int arr[], const int n, const int target) {
-  int low = 0, high = n - 1;
-
-  while (low <= high) {
-    const int mid = (low + high) / 2;
-    if (target < arr[mid]) {
-      high = mid - 1;
-    } else if (target > arr[mid]) {
-      low = mid + 1;
-    } else {
-      return mid;
-    }
-  }
-  return -1;
-}
-
-bool containsDuplicates(const int arr[], const int n) {
-  for (int i = 0; i < n; i++) {
-    for (int j = i + 1; j < n; j++) {
-      if (arr[i] == arr[j]) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
