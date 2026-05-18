@@ -8,7 +8,7 @@
 static SSST st = NULL;
 
 static void setup() {
-  st = SSST_Create();
+  st = SSST_Create(CMP_Int);
 }
 
 static void teardown() {
@@ -48,8 +48,8 @@ Test(
   cr_assert_neq(st, NULL);
 
   const int n = 3;
-  const char *keys[n] = {"foo", "bar", "foobar"};
-  const int vals[n] = {1, 2, 3};
+  const int keys[n] = {0, 1, 2};
+  const int vals[n] = {10, 99, 78};
 
   for (int i = 0; i < n; i++) {
     SSSTKey key = &keys[i];
