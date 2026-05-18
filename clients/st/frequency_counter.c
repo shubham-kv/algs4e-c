@@ -1,10 +1,10 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
 
-#include "st_sequential_search.h"
 #include "common_macros.h"
+#include "st_sequential_search.h"
 
 #define BUFFER_LENGTH 64
 
@@ -28,7 +28,7 @@ int main(int argc, char const *argv[]) {
   }
 
   char *end;
-  const int threshold = (int) strtol(argv[1], &end, 10);
+  const int minWordLen = (int)strtol(argv[1], &end, 10);
   if (end == argv[1]) {
     _printHelp(stderr, argv[0]);
     return EXIT_FAILURE;
@@ -44,22 +44,24 @@ int main(int argc, char const *argv[]) {
   while (fscanf(stdin, "%63s", buffer) != EOF) {
     const int wordLen = strlen(buffer);
 
-    if (wordLen >= threshold) {
-      char *word = calloc(wordLen + 1, sizeof(*word));
-      REQUIRE_TRUE(IS_NOT_NULL(word), ENOMEM, EXIT_FAILURE);
-      strncpy(word, buffer, wordLen);
+    if (wordLen < minWordLen) {
+      continue;
+    }
 
-      if (!SSST_Contains(wordCountST, word)) {
-        int *count = calloc(1, sizeof(*count));
-        REQUIRE_TRUE(IS_NOT_NULL(count), ENOMEM, EXIT_FAILURE);
-        *count = 1;
-        ENSURE_CALL_SUCCESS(SSST_Put(wordCountST, word, count));
-      } else {
-        SSSTVal countInST;
-        ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, word, &countInST));
-        int *count = (int *)countInST;
-        (*count)++;
-      }
+    char *word = calloc(wordLen + 1, sizeof(*word));
+    REQUIRE_TRUE(IS_NOT_NULL(word), ENOMEM, EXIT_FAILURE);
+    strncpy(word, buffer, wordLen);
+
+    if (!SSST_Contains(wordCountST, word)) {
+      int *count = calloc(1, sizeof(*count));
+      REQUIRE_TRUE(IS_NOT_NULL(count), ENOMEM, EXIT_FAILURE);
+      *count = 1;
+      ENSURE_CALL_SUCCESS(SSST_Put(wordCountST, word, count));
+    } else {
+      SSSTVal countInST;
+      ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, word, &countInST));
+      int *count = (int *)countInST;
+      (*count)++;
     }
     memset(buffer, 0, BUFFER_LENGTH);
   }
@@ -72,7 +74,8 @@ int main(int argc, char const *argv[]) {
   REQUIRE_TRUE(IS_NOT_NULL(mostFrequentWordCount), ENOMEM, EXIT_FAILURE);
   *mostFrequentWordCount = 0;
 
-  ENSURE_CALL_SUCCESS(SSST_Put(wordCountST, mostFrequentWord, mostFrequentWordCount));
+  ENSURE_CALL_SUCCESS(
+      SSST_Put(wordCountST, mostFrequentWord, mostFrequentWordCount));
 
   // Iterate through the keys to find the most frequent word
   SSSTKeysIter iterator = SSSTKeysIter_Create(wordCountST);
@@ -87,7 +90,8 @@ int main(int argc, char const *argv[]) {
     ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, wordInST, &wordCountInST));
     const int *wordCount = (const int *)wordCountInST;
 
-    ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, mostFrequentWord, &wordCountInST));
+    ENSURE_CALL_SUCCESS(
+        SSST_Get(wordCountST, mostFrequentWord, &wordCountInST));
     const int *mostFrequentWordCount = (int *)wordCountInST;
 
     if (*wordCount > *mostFrequentWordCount) {
@@ -99,7 +103,7 @@ int main(int argc, char const *argv[]) {
   // Print the most frequent word & it's count
   SSSTVal wordCountInST;
   ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, mostFrequentWord, &wordCountInST));
-  mostFrequentWordCount = (int *) wordCountInST;
+  mostFrequentWordCount = (int *)wordCountInST;
   fprintf(stdout, "%s %d\n", mostFrequentWord, *mostFrequentWordCount);
 
   // Cleanup
