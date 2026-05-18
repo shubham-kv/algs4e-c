@@ -1,2 +1,3 @@
 add_library(st_sequential_search SHARED st_sequential_search.c)
 target_include_directories(st_sequential_search PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(st_sequential_search PRIVATE linked_node)

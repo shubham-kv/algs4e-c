@@ -4,6 +4,7 @@
 
 #include "common_macros.h"
 #include "comparators.h"
+#include "linked_node.h"
 #include "st_sequential_search.h"
 
 struct SequentialSearchSTNode;
@@ -135,45 +136,32 @@ struct SequentialSearchSTKeysIterator {
   struct SequentialSearchSTNode *cur;
 };
 
-static int SSSTKeysIter_Init(SSSTKeysIter iterator, SSST st) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
-  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
-  iterator->cur = st->first;
-  return EXIT_SUCCESS;
-}
-
 SSSTKeysIter SSSTKeysIter_Create(SSST st) {
-  SSSTKeysIter iterator = calloc(1, sizeof(*iterator));
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, NULL);
-  SSSTKeysIter_Init(iterator, st);
-  return iterator;
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, NULL);
+  return (SSSTKeysIter)LinkedNodeIter_Create((LinkedNode)st->first);
 }
 
-static int SSSTKeysIter_Clear(SSSTKeysIter iterator) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
-  memset(iterator, 0, sizeof(*iterator));
-  return EXIT_SUCCESS;
+inline int SSSTKeysIter_Delete(SSSTKeysIter *iterator) {
+  return LinkedNodeIter_Delete((LinkedNodeIter *)iterator);
 }
 
-int SSSTKeysIter_Delete(SSSTKeysIter *iterator) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator) && IS_NOT_NULL(*iterator), EINVAL,
-               EXIT_FAILURE);
-  SSSTKeysIter_Clear(*iterator);
-  free(*iterator), (*iterator = NULL);
-  return EXIT_SUCCESS;
-}
-
-bool SSSTKeysIter_HasNext(SSSTKeysIter iterator) {
-  return IS_NOT_NULL(iterator->cur);
+inline bool SSSTKeysIter_HasNext(SSSTKeysIter iterator) {
+  return LinkedNodeIter_HasNext((LinkedNodeIter)iterator);
 }
 
 int SSSTKeysIter_GetNext(SSSTKeysIter iterator, SSSTKey *out) {
   REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
-  REQUIRE_TRUE(IS_NOT_NULL(iterator->cur), ENODATA, EXIT_FAILURE);
 
-  *out = iterator->cur->key;
-  iterator->cur = iterator->cur->next;
+  SSSTNode cur;
+  const int code =
+      LinkedNodeIter_GetNext((LinkedNodeIter)iterator, (LinkedNode *)&cur);
+
+  if (code != EXIT_SUCCESS) {
+    return EXIT_FAILURE;
+  }
+
+  *out = cur->key;
   return EXIT_SUCCESS;
 }
 
