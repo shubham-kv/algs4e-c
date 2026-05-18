@@ -1,5 +1,6 @@
 #include <memory.h>
 #include <stdlib.h>
+
 #include "arr_utils.h"
 
 void ArrUtils_Swap(void *arr, size_t width, size_t i, size_t j) {
@@ -18,3 +19,14 @@ bool ArrUtils_IsSorted(void *arr, size_t width, size_t n, ComparatorFn cmp) {
   return true;
 }
 
+bool ArrUtils_ContainsDuplicates(void *arr, size_t width, size_t n,
+                                 ComparatorFn cmp) {
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = i + 1; j < n; j++) {
+      if (cmp(arr + i * width, arr + j * width) == 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
