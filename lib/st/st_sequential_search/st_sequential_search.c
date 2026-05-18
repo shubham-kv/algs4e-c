@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "common_macros.h"
+#include "comparators.h"
 #include "st_sequential_search.h"
 
 struct SequentialSearchSTNode;
@@ -11,6 +12,7 @@ typedef struct SequentialSearchSTNode *SSSTNode;
 struct SequentialSearchST {
   struct SequentialSearchSTNode *first;
   int size;
+  ComparatorFn keyComparator;
 };
 
 struct SequentialSearchSTNode {
@@ -19,17 +21,23 @@ struct SequentialSearchSTNode {
   SSSTVal val;
 };
 
-static int SSST_Init(SSST st) {
+static bool _equals(SSST st, SSSTKey a, SSSTKey b);
+
+static int SSST_Init(SSST st, ComparatorFn keyComparator) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(keyComparator), EINVAL, EXIT_FAILURE);
   st->first = NULL;
   st->size = 0;
+  st->keyComparator = keyComparator;
   return EXIT_SUCCESS;
 }
 
-SSST SSST_Create() {
+SSST SSST_Create(ComparatorFn keyComparator) {
+  REQUIRE_TRUE(IS_NOT_NULL(keyComparator), EINVAL, NULL);
+
   SSST st = calloc(1, sizeof(*st));
   REQUIRE_TRUE(IS_NOT_NULL(st), ENOMEM, NULL);
-  SSST_Init(st);
+  SSST_Init(st, keyComparator);
   return st;
 }
 
@@ -59,7 +67,7 @@ int SSST_Put(SSST st, SSSTKey key, SSSTVal val) {
 
   SSSTNode cur = st->first;
   for (; IS_NOT_NULL(cur); cur = cur->next) {
-    if (cur->key == key) {
+    if (_equals(st, cur->key, key)) {
       cur->val = val;
       return EXIT_SUCCESS;
     }
@@ -83,7 +91,7 @@ int SSST_Get(SSST st, SSSTKey key, SSSTVal *out) {
 
   SSSTNode cur = st->first;
   for (; IS_NOT_NULL(cur); cur = cur->next) {
-    if (cur->key == key) {
+    if (_equals(st, cur->key, key)) {
       if (IS_NOT_NULL(out)) {
         *out = cur->val;
       }
@@ -100,7 +108,7 @@ int SSST_DeleteKey(SSST st, SSSTKey key) {
 
   SSSTNode prev = NULL, cur = st->first;
   for (; IS_NOT_NULL(cur); prev = cur, cur = cur->next) {
-    if (cur->key == key) {
+    if (_equals(st, cur->key, key)) {
       if (IS_NOT_NULL(prev)) {
         prev->next = cur->next;
       } else {
@@ -167,4 +175,8 @@ int SSSTKeysIter_GetNext(SSSTKeysIter iterator, SSSTKey *out) {
   *out = iterator->cur->key;
   iterator->cur = iterator->cur->next;
   return EXIT_SUCCESS;
+}
+
+static bool _equals(SSST st, SSSTKey a, SSSTKey b) {
+  return st->keyComparator(a, b) == 0;
 }

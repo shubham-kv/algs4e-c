@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include "comparators.h"
 
 #ifndef __sequential_search_st_h
 #define __sequential_search_st_h
@@ -16,7 +17,7 @@ typedef struct SequentialSearchSTKeysIterator *SSSTKeysIter;
 #define VAL SSSTVal
 #define ITER SSSTKeysIter
 
-  ST SSST_Create();
+  ST SSST_Create(ComparatorFn keyComparator);
  int SSST_Delete(ST *st);
  int SSST_Put(ST st, KEY key, VAL val);
  int SSST_Get(ST st, KEY key, VAL *out);
