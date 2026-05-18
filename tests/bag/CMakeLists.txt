@@ -1,5 +1,5 @@
 add_criterion_test(test_bag_int test_bag_int.c)
-target_link_libraries(test_bag_int PRIVATE bag_int)
+target_link_libraries(test_bag_int PRIVATE bag_int arr_utils comparators test_utils)
 
 add_criterion_test(test_bag_linked test_bag_linked.c)
 target_link_libraries(test_bag_linked PRIVATE bag_linked arr_utils comparators test_utils)
