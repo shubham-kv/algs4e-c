@@ -1,8 +1,10 @@
-#include "bag_linked.h"
-#include "common_macros.h"
 #include <errno.h>
 #include <memory.h>
 #include <stdlib.h>
+
+#include "bag_linked.h"
+#include "common_macros.h"
+#include "linked_node.h"
 
 struct LinkedBagNode {
   struct LinkedBagNode *next;
@@ -38,7 +40,6 @@ int Bag_Clear(Bag bag) {
 
 int Bag_Delete(Bag *bag) {
   REQUIRE_TRUE(IS_NOT_NULL(bag) && IS_NOT_NULL(*bag), EINVAL, EXIT_FAILURE);
-
   Bag_Clear(*bag);
   free(*bag), (*bag = NULL);
   return EXIT_SUCCESS;
@@ -62,45 +63,40 @@ int Bag_Add(Bag bag, BagItem item) {
 inline int Bag_Size(Bag bag) { return bag->size; }
 inline bool Bag_IsEmpty(Bag bag) { return Bag_Size(bag) == 0; }
 
-BagIterator BagIterator_Create(Bag bag) {
-  BagIterator iterator = calloc(1, sizeof(*iterator));
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, NULL);
-  BagIterator_Init(iterator, bag);
-  return iterator;
-}
-
 int BagIterator_Init(BagIterator iterator, Bag bag) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(bag), EINVAL, EXIT_FAILURE);
-  iterator->cur = bag->first;
-  return EXIT_SUCCESS;
+  return LinkedNodeIter_Init((LinkedNodeIter)iterator, (LinkedNode)bag->first);
 }
 
-int BagIterator_Clear(BagIterator iterator) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
-  memset(iterator, 0, sizeof(*iterator));
-  return EXIT_SUCCESS;
+BagIterator BagIterator_Create(Bag bag) {
+  REQUIRE_TRUE(IS_NOT_NULL(bag), EINVAL, NULL);
+  return (BagIterator)LinkedNodeIter_Create((LinkedNode)bag->first);
 }
 
-int BagIterator_Delete(BagIterator *iterator) {
-  REQUIRE_TRUE(IS_NOT_NULL(iterator) && IS_NOT_NULL(*iterator), EINVAL,
-               EXIT_FAILURE);
+inline int BagIterator_Clear(BagIterator iterator) {
+  return LinkedNodeIter_Clear((LinkedNodeIter)iterator);
+}
 
-  BagIterator_Clear(*iterator);
-  free(*iterator), (*iterator = NULL);
-  return EXIT_SUCCESS;
+inline int BagIterator_Delete(BagIterator *iterator) {
+  return LinkedNodeIter_Delete((LinkedNodeIter *)iterator);
 }
 
 inline bool BagIterator_HasNext(BagIterator iterator) {
-  return IS_NOT_NULL(iterator->cur);
+  return LinkedNodeIter_HasNext((LinkedNodeIter)iterator);
 }
 
 int BagIterator_GetNext(BagIterator iterator, BagItem *out) {
   REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
-  REQUIRE_TRUE(IS_NOT_NULL(iterator->cur), ENODATA, EXIT_FAILURE);
 
-  *out = iterator->cur->item;
-  iterator->cur = iterator->cur->next;
+  BagNode cur;
+  const int code =
+      LinkedNodeIter_GetNext((LinkedNodeIter)iterator, (LinkedNode *)&cur);
+
+  if (code != EXIT_SUCCESS) {
+    return EXIT_FAILURE;
+  }
+
+  *out = cur->item;
   return EXIT_SUCCESS;
 }
