@@ -31,7 +31,6 @@ struct IntegerBag {
 bool IntBag_IsEmpty(BAG bag);
 
 struct IntegerBagIterator {
-  struct IntegerBag *bag;
   struct IntegerBagNode *cur;
 };
 
