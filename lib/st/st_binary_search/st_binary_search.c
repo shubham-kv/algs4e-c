@@ -147,10 +147,50 @@ int BSST_Contains(BSST st, BSSTKey key, bool *out) {
 inline int BSST_Size(BSST st) { return st->n; }
 inline bool BSST_IsEmpty(BSST st) { return BSST_Size(st) <= 0; }
 
-int BSST_Min(BSST st, BSSTKey *out);
-int BSST_Max(BSST st, BSSTKey *out);
-int BSST_Floor(BSST st, BSSTKey key, BSSTKey *out);
-int BSST_Ceiling(BSST st, BSSTKey key, BSSTKey *out);
+int BSST_Min(BSST st, BSSTKey *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(st->n > 0, ENODATA, EXIT_FAILURE);
+  *out = st->keys[0];
+  return EXIT_SUCCESS;
+}
+
+int BSST_Max(BSST st, BSSTKey *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(st->n > 0, ENODATA, EXIT_FAILURE);
+  *out = st->keys[st->n - 1];
+  return EXIT_SUCCESS;
+}
+
+int BSST_Floor(BSST st, BSSTKey key, BSSTKey *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+
+  int rank = -1;
+  ENSURE_SUCCESS(BSST_Rank(st, key, &rank));
+  assert(rank >= 0);
+
+  if (rank < st->n && _keysEqual(st, key, st->keys[rank])) {
+    *out = st->keys[rank];
+    return EXIT_SUCCESS;
+  }
+
+  return BSST_Select(st, rank - 1, out);
+}
+
+int BSST_Ceiling(BSST st, BSSTKey key, BSSTKey *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+
+  int rank = -1;
+  ENSURE_SUCCESS(BSST_Rank(st, key, &rank));
+  assert(rank >= 0);
+
+  return BSST_Select(st, rank, out);
+}
 
 int BSST_Rank(BSST st, BSSTKey key, int *out) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
@@ -177,7 +217,17 @@ int BSST_Rank(BSST st, BSSTKey key, int *out) {
   return EXIT_SUCCESS;
 }
 
-int BSST_Select(BSST st, int rank, BSSTKey *out);
+int BSST_Select(BSST st, int rank, BSSTKey *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(rank >= 0, ERANGE, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+
+  REQUIRE_TRUE(st->n > 0, ENODATA, EXIT_FAILURE);
+  REQUIRE_TRUE(rank < st->n, ERANGE, EXIT_FAILURE);
+  *out = st->keys[rank];
+  return EXIT_SUCCESS;
+}
+
 int BSST_DeleteMin(BSST st);
 int BSST_DeleteMax(BSST st);
 int BSST_SizeOfRange(BSST st, BSSTKey low, BSSTKey high);
