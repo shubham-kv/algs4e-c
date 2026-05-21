@@ -131,7 +131,36 @@ int BSST_Get(BSST st, BSSTKey key, BSSTVal *out) {
   return EXIT_FAILURE;
 }
 
-int BSST_DeleteKey(BSST st, BSSTKey key) { return EXIT_SUCCESS; }
+int BSST_DeleteKey(BSST st, BSSTKey key) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
+
+  REQUIRE_TRUE(st->n > 0, ENODATA, EXIT_FAILURE);
+
+  int rank = -1;
+  ENSURE_SUCCESS(BSST_Rank(st, key, &rank));
+  assert(rank >= 0);
+
+  if (rank < st->n && _keysEqual(st, key, st->keys[rank])) {
+    for (int i = rank; i + 1 < st->n; i++) {
+      st->keys[i] = st->keys[i + 1];
+      st->values[i] = st->values[i + 1];
+    }
+
+    st->keys[st->n - 1] = NULL;
+    st->values[st->n - 1] = NULL;
+    st->n--;
+
+    if (st->n > 0 && st->n < st->capacity / 4) {
+      ENSURE_SUCCESS(_resizeArrays(st, st->capacity / 2));
+    }
+
+    return EXIT_SUCCESS;
+  }
+
+  REQUIRE_TRUE(0, EINVAL, EXIT_FAILURE);
+  return EXIT_FAILURE;
+}
 
 int BSST_Contains(BSST st, BSSTKey key, bool *out) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
@@ -228,8 +257,20 @@ int BSST_Select(BSST st, int rank, BSSTKey *out) {
   return EXIT_SUCCESS;
 }
 
-int BSST_DeleteMin(BSST st);
-int BSST_DeleteMax(BSST st);
+int BSST_DeleteMin(BSST st) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  BSSTKey min;
+  ENSURE_SUCCESS(BSST_Min(st, &min));
+  return BSST_DeleteKey(st, min);
+}
+
+int BSST_DeleteMax(BSST st) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  BSSTKey max;
+  ENSURE_SUCCESS(BSST_Max(st, &max));
+  return BSST_DeleteKey(st, max);
+}
+
 int BSST_SizeOfRange(BSST st, BSSTKey low, BSSTKey high);
 
 BSSTKeysIter BSSTKeysIter_Create(BSST st);
