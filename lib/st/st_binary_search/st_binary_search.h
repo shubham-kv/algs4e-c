@@ -23,7 +23,7 @@ typedef struct BinarySearchSTKeysIterator *BSSTKeysIter;
  int BSST_Put(ST st, KEY key, VAL val);
  int BSST_Get(ST st, KEY key, VAL *out);
  int BSST_DeleteKey(ST st, KEY key);
-bool BSST_Contains(ST st, KEY key);
+ int BSST_Contains(BSST st, BSSTKey key, bool *out);
  int BSST_Size(ST st);
 bool BSST_IsEmpty(ST st);
 

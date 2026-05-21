@@ -133,9 +133,19 @@ int BSST_Get(BSST st, BSSTKey key, BSSTVal *out) {
 
 int BSST_DeleteKey(BSST st, BSSTKey key) { return EXIT_SUCCESS; }
 
-bool BSST_Contains(BSST st, BSSTKey key);
-int BSST_Size(BSST st);
-bool BSST_IsEmpty(BSST st);
+int BSST_Contains(BSST st, BSSTKey key, bool *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+
+  BSSTVal val;
+  const int code = BSST_Get(st, key, &val);
+  *out = code == EXIT_SUCCESS;
+  return EXIT_SUCCESS;
+}
+
+inline int BSST_Size(BSST st) { return st->n; }
+inline bool BSST_IsEmpty(BSST st) { return BSST_Size(st) <= 0; }
 
 int BSST_Min(BSST st, BSSTKey *out);
 int BSST_Max(BSST st, BSSTKey *out);
