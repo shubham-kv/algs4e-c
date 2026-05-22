@@ -27,6 +27,7 @@ struct BinarySearchST {
 
 static int _resize(BSST st, const int newCapacity);
 static bool _equals(BSST st, BSSTKey keyA, BSSTKey keyB);
+static bool _less(BSST st, BSSTKey keyA, BSSTKey keyB);
 
 static int BSST_Init(BSST st, ComparatorFn keyComparator) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
@@ -271,7 +272,29 @@ int BSST_DeleteMax(BSST st) {
   return BSST_DeleteKey(st, max);
 }
 
-int BSST_SizeOfRange(BSST st, BSSTKey low, BSSTKey high);
+int BSST_SizeOfRange(BSST st, BSSTKey low, BSSTKey high, int *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(low), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(high), EINVAL, EXIT_FAILURE);
+
+  REQUIRE_TRUE(!_less(st, high, low), EINVAL, EXIT_FAILURE);
+
+  int rankLow = -1;
+  ENSURE_SUCCESS(BSST_Rank(st, low, &rankLow));
+  assert(rankLow >= 0);
+
+  int rankHigh = -1;
+  ENSURE_SUCCESS(BSST_Rank(st, high, &rankHigh));
+  assert(rankHigh >= 0);
+
+  if (rankHigh < st->n && _equals(st, high, st->keys[rankHigh])) {
+    *out = rankHigh - rankLow + 1;
+  } else {
+    *out = rankHigh - rankLow;
+  }
+
+  return EXIT_SUCCESS;
+}
 
 BSSTKeysIter BSSTKeysIter_Create(BSST st);
 BSSTKeysIter BSSTKeysIter_CreateInRange(BSST st, BSSTKey low, BSSTKey high);
@@ -293,4 +316,8 @@ static int _resize(BSST st, const int newCapacity) {
 
 static inline bool _equals(BSST st, BSSTKey keyA, BSSTKey keyB) {
   return st->keyComparator(keyA, keyB) == 0;
+}
+
+static inline bool _less(BSST st, BSSTKey keyA, BSSTKey keyB) {
+  return st->keyComparator(keyA, keyB) < 0;
 }

@@ -35,7 +35,7 @@ bool BSST_IsEmpty(ST st);
  int BSST_Select(ST st, int rank, KEY *out);
  int BSST_DeleteMin(ST st);
  int BSST_DeleteMax(ST st);
- int BSST_SizeOfRange(ST st, KEY low, KEY high);
+ int BSST_SizeOfRange(ST st, KEY low, KEY high, int *out);
 
 ITER BSSTKeysIter_Create(ST st);
 ITER BSSTKeysIter_CreateInRange(ST st, KEY low, KEY high);
