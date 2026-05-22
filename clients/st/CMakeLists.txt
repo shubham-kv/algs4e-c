@@ -1,2 +1,5 @@
 add_executable(frequency_counter frequency_counter.c)
 target_link_libraries(frequency_counter PRIVATE st_sequential_search)
+
+add_executable(st_binary_search_client st_binary_search_client.c)
+target_link_libraries(st_binary_search_client PRIVATE st_binary_search comparators)
