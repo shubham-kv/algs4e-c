@@ -25,8 +25,8 @@ struct BinarySearchST {
   int capacity;
 };
 
-static int _resizeArrays(BSST st, const int newCapacity);
-static bool _keysEqual(BSST st, BSSTKey keyA, BSSTKey keyB);
+static int _resize(BSST st, const int newCapacity);
+static bool _equals(BSST st, BSSTKey keyA, BSSTKey keyB);
 
 static int BSST_Init(BSST st, ComparatorFn keyComparator) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
@@ -88,14 +88,14 @@ int BSST_Put(BSST st, BSSTKey key, BSSTVal val) {
   assert(rank >= 0);
 
   // If key already exists then update the value and return
-  if (rank < st->n && _keysEqual(st, key, st->keys[rank])) {
+  if (rank < st->n && _equals(st, key, st->keys[rank])) {
     st->values[rank] = val;
     return EXIT_SUCCESS;
   }
 
   // Double the capacity if this table is full
   if (st->n >= st->capacity) {
-    ENSURE_SUCCESS(_resizeArrays(st, st->capacity * 2));
+    ENSURE_SUCCESS(_resize(st, st->capacity * 2));
   }
 
   // Shift entries from rank until n-1 (+1 for new entry) to right by 1 unit
@@ -122,7 +122,7 @@ int BSST_Get(BSST st, BSSTKey key, BSSTVal *out) {
   ENSURE_SUCCESS(BSST_Rank(st, key, &rank));
   assert(rank >= 0);
 
-  if (rank < st->n && _keysEqual(st, key, st->keys[rank])) {
+  if (rank < st->n && _equals(st, key, st->keys[rank])) {
     *out = st->values[rank];
     return EXIT_SUCCESS;
   }
@@ -141,7 +141,7 @@ int BSST_DeleteKey(BSST st, BSSTKey key) {
   ENSURE_SUCCESS(BSST_Rank(st, key, &rank));
   assert(rank >= 0);
 
-  if (rank < st->n && _keysEqual(st, key, st->keys[rank])) {
+  if (rank < st->n && _equals(st, key, st->keys[rank])) {
     for (int i = rank; i + 1 < st->n; i++) {
       st->keys[i] = st->keys[i + 1];
       st->values[i] = st->values[i + 1];
@@ -152,7 +152,7 @@ int BSST_DeleteKey(BSST st, BSSTKey key) {
     st->n--;
 
     if (st->n > 0 && st->n < st->capacity / 4) {
-      ENSURE_SUCCESS(_resizeArrays(st, st->capacity / 2));
+      ENSURE_SUCCESS(_resize(st, st->capacity / 2));
     }
 
     return EXIT_SUCCESS;
@@ -201,7 +201,7 @@ int BSST_Floor(BSST st, BSSTKey key, BSSTKey *out) {
   ENSURE_SUCCESS(BSST_Rank(st, key, &rank));
   assert(rank >= 0);
 
-  if (rank < st->n && _keysEqual(st, key, st->keys[rank])) {
+  if (rank < st->n && _equals(st, key, st->keys[rank])) {
     *out = st->keys[rank];
     return EXIT_SUCCESS;
   }
@@ -279,7 +279,7 @@ int BSSTKeysIter_Delete(BSSTKeysIter *iterator);
 bool BSSTKeysIter_HasNext(BSSTKeysIter iterator);
 int BSSTKeysIter_GetNext(BSSTKeysIter iterator, BSSTKey *out);
 
-static int _resizeArrays(BSST st, const int newCapacity) {
+static int _resize(BSST st, const int newCapacity) {
   st->capacity = newCapacity;
 
   st->keys = realloc(st->keys, newCapacity * sizeof(*st->keys));
@@ -291,6 +291,6 @@ static int _resizeArrays(BSST st, const int newCapacity) {
   return EXIT_SUCCESS;
 }
 
-static inline bool _keysEqual(BSST st, BSSTKey keyA, BSSTKey keyB) {
+static inline bool _equals(BSST st, BSSTKey keyA, BSSTKey keyB) {
   return st->keyComparator(keyA, keyB) == 0;
 }
