@@ -25,6 +25,13 @@ struct BinarySearchST {
   int capacity;
 };
 
+struct BinarySearchSTKeysIterator {
+  BSST st;
+  int i;
+  int c;
+  int n;
+};
+
 static int _resize(BSST st, const int newCapacity);
 static bool _equals(BSST st, BSSTKey keyA, BSSTKey keyB);
 static bool _less(BSST st, BSSTKey keyA, BSSTKey keyB);
@@ -296,11 +303,78 @@ int BSST_SizeOfRange(BSST st, BSSTKey low, BSSTKey high, int *out) {
   return EXIT_SUCCESS;
 }
 
-BSSTKeysIter BSSTKeysIter_Create(BSST st);
-BSSTKeysIter BSSTKeysIter_CreateInRange(BSST st, BSSTKey low, BSSTKey high);
-int BSSTKeysIter_Delete(BSSTKeysIter *iterator);
-bool BSSTKeysIter_HasNext(BSSTKeysIter iterator);
-int BSSTKeysIter_GetNext(BSSTKeysIter iterator, BSSTKey *out);
+BSSTKeysIter BSSTKeysIter_Create(BSST st) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, NULL);
+
+  BSSTKeysIter iterator = calloc(1, sizeof(*iterator));
+  REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, NULL);
+
+  iterator->st = st;
+  iterator->i = 0;
+  iterator->c = 0;
+  iterator->n = st->n;
+
+  return iterator;
+}
+
+BSSTKeysIter BSSTKeysIter_CreateInRange(BSST st, BSSTKey low, BSSTKey high) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, NULL);
+  REQUIRE_TRUE(IS_NOT_NULL(low), EINVAL, NULL);
+  REQUIRE_TRUE(IS_NOT_NULL(high), EINVAL, NULL);
+
+  BSSTKeysIter iterator = BSSTKeysIter_Create(st);
+  REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, NULL);
+
+  REQUIRE_TRUE(!_less(st, high, low), EINVAL, NULL);
+
+  int rankLow = -1;
+  int code = BSST_Rank(st, low, &rankLow);
+  REQUIRE_TRUE(code == EXIT_SUCCESS, EINVAL, NULL);
+  assert(rankLow >= 0);
+
+  int rankHigh = -1;
+  code = BSST_Rank(st, high, &rankHigh);
+  REQUIRE_TRUE(code == EXIT_SUCCESS, EINVAL, NULL);
+  assert(rankHigh >= 0);
+
+  iterator->i = rankLow;
+
+  if (rankHigh < st->n && _equals(st, high, st->keys[rankHigh])) {
+    iterator->n = rankHigh - rankLow + 1;
+  } else {
+    iterator->n = rankHigh - rankLow;
+  }
+
+  return iterator;
+}
+
+int BSSTKeysIter_Delete(BSSTKeysIter *iterator) {
+  REQUIRE_TRUE(IS_NOT_NULL(iterator) && IS_NOT_NULL(*iterator), EINVAL,
+               EXIT_FAILURE);
+  memset(iterator, 0, sizeof(*iterator));
+  free(*iterator), (*iterator = NULL);
+  return EXIT_SUCCESS;
+}
+
+bool BSSTKeysIter_HasNext(BSSTKeysIter iterator) {
+  return iterator->c < iterator->n;
+}
+
+int BSSTKeysIter_GetNext(BSSTKeysIter iterator, BSSTKey *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(iterator->n > 0, ENODATA, EXIT_FAILURE);
+  REQUIRE_TRUE(iterator->c < iterator->n, ENODATA, EXIT_FAILURE);
+
+  *out = iterator->st->keys[iterator->i];
+  iterator->i++;
+  iterator->c++;
+  return EXIT_SUCCESS;
+}
+
+// =====================================
+// Utilities
+// =====================================
 
 static int _resize(BSST st, const int newCapacity) {
   st->capacity = newCapacity;
