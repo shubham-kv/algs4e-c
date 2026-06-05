@@ -11,9 +11,9 @@ struct SequentialSearchSTNode;
 typedef struct SequentialSearchSTNode *SSSTNode;
 
 struct SequentialSearchST {
-  struct SequentialSearchSTNode *first;
-  int size;
   ComparatorFn keyComparator;
+  struct SequentialSearchSTNode *first;
+  int n;
 };
 
 struct SequentialSearchSTNode {
@@ -27,9 +27,9 @@ static bool _equals(SSST st, SSSTKey a, SSSTKey b);
 static int SSST_Init(SSST st, ComparatorFn keyComparator) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(keyComparator), EINVAL, EXIT_FAILURE);
-  st->first = NULL;
-  st->size = 0;
   st->keyComparator = keyComparator;
+  st->first = NULL;
+  st->n = 0;
   return EXIT_SUCCESS;
 }
 
@@ -38,6 +38,7 @@ SSST SSST_Create(ComparatorFn keyComparator) {
 
   SSST st = calloc(1, sizeof(*st));
   REQUIRE_TRUE(IS_NOT_NULL(st), ENOMEM, NULL);
+
   SSST_Init(st, keyComparator);
   return st;
 }
@@ -81,7 +82,7 @@ int SSST_Put(SSST st, SSSTKey key, SSSTVal val) {
   node->val = val;
   node->next = st->first;
   st->first = node;
-  st->size++;
+  st->n++;
 
   return EXIT_SUCCESS;
 }
@@ -117,7 +118,7 @@ int SSST_DeleteKey(SSST st, SSSTKey key) {
       }
 
       free(cur), (cur = NULL);
-      st->size--;
+      st->n--;
       return EXIT_SUCCESS;
     }
   }
@@ -129,7 +130,7 @@ inline bool SSST_Contains(SSST st, SSSTKey key) {
   return SSST_Get(st, key, NULL) == EXIT_SUCCESS;
 }
 
-inline int SSST_Size(SSST st) { return st->size; }
+inline int SSST_Size(SSST st) { return st->n; }
 inline bool SSST_IsEmpty(SSST st) { return SSST_Size(st) == 0; }
 
 struct SequentialSearchSTKeysIterator {
