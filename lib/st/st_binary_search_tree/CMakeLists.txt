@@ -1,0 +1,2 @@
+add_library(st_binary_search_tree SHARED st_binary_search_tree.c)
+target_include_directories(st_binary_search_tree PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
