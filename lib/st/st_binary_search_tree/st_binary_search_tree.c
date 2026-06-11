@@ -30,6 +30,12 @@ struct BinarySearchTree {
 
 static int _nodeSize(BSTNode node);
 static BSTKey _nodeKey(BSTNode node);
+static bool _less(BST st, BSTKey keyA, BSTKey keyB);
+
+static BSTNode min(BSTNode node);
+static BSTNode max(BSTNode node);
+static BSTNode deleteMin(BSTNode node, const bool shouldFree);
+static BSTNode deleteMax(BSTNode node, const bool shouldFree);
 
 static int BST_Init(BST st, ComparatorFn keyComparator) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
@@ -136,6 +142,46 @@ int BST_Get(BST st, BSTKey key, BSTVal *out) {
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
 
   *out = get(st, st->root, key);
+  return EXIT_SUCCESS;
+}
+
+static BSTNode deleteKey(BST st, BSTNode node, BSTKey key) {
+  REQUIRE_TRUE(IS_NOT_NULL(node), EINVAL, NULL);
+
+  const int cmp = st->keyComparator(key, node->key);
+
+  if (cmp < 0) {
+    node->left = deleteKey(st, node->left, key);
+  } else if (cmp > 0) {
+    node->right = deleteKey(st, node->right, key);
+  } else {
+    if (IS_NULL(node->left)) {
+      BSTNode right = node->right;
+      free(node), (node = NULL);
+      return right;
+    }
+    if (IS_NULL(node->right)) {
+      BSTNode left = node->left;
+      free(node), (node = NULL);
+      return left;
+    }
+
+    BSTNode successor = min(node->right);
+    successor->left = node->left;
+    successor->right = deleteMin(node->right, false);
+    free(node), (node = NULL);
+    node = successor;
+  }
+
+  node->n = _nodeSize(node->left) + 1 + _nodeSize(node->right);
+  return node;
+}
+
+int BST_DeleteKey(BST st, BSTKey key) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, EXIT_FAILURE);
+  st->root = deleteKey(st, st->root, key);
   return EXIT_SUCCESS;
 }
 
@@ -292,10 +338,84 @@ int BST_Select(BST st, int rank, BSTKey *out) {
   return EXIT_SUCCESS;
 }
 
+static BSTNode deleteMin(BSTNode node, const bool shouldFree) {
+  REQUIRE_TRUE(IS_NOT_NULL(node), EINVAL, NULL);
+
+  if (IS_NULL(node->left)) {
+    BSTNode right = node->right;
+    if (shouldFree) {
+      free(node), (node = NULL);
+    }
+    return right;
+  }
+
+  node->left = deleteMin(node->left, shouldFree);
+  node->n = _nodeSize(node->left) + 1 + _nodeSize(node->right);
+
+  return node;
+}
+
+int BST_DeleteMin(BST st) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, EXIT_FAILURE);
+  st->root = deleteMin(st->root, true);
+  return EXIT_SUCCESS;
+}
+
+static BSTNode deleteMax(BSTNode node, const bool shouldFree) {
+  REQUIRE_TRUE(IS_NOT_NULL(node), EINVAL, NULL);
+
+  if (IS_NULL(node->right)) {
+    BSTNode left = node->left;
+    if (shouldFree) {
+      free(node), (node = NULL);
+    }
+    return left;
+  }
+
+  node->right = deleteMax(node->right, shouldFree);
+  node->n = _nodeSize(node->left) + 1 + _nodeSize(node->right);
+
+  return node;
+}
+
+int BST_DeleteMax(BST st) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, EXIT_FAILURE);
+
+  st->root = deleteMax(st->root, true);
+  return EXIT_SUCCESS;
+}
+
+int BST_SizeOfRange(BST st, BSTKey low, BSTKey high, int *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(low), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(high), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+
+  REQUIRE_TRUE(!_less(st, high, low), EINVAL, EXIT_FAILURE);
+
+  const int rankLow = rank(st, st->root, low);
+  const int rankHigh = rank(st, st->root, high);
+  *out = rankHigh - rankLow;
+
+  bool containsHigh = false;
+  ENSURE_SUCCESS(BST_Contains(st, high, &containsHigh));
+
+  if (containsHigh) {
+    (*out)++;
+  }
+  return EXIT_SUCCESS;
+}
+
 static inline int _nodeSize(BSTNode node) {
   return IS_NOT_NULL(node) ? node->n : 0;
 }
 
 static inline BSTKey _nodeKey(BSTNode node) {
   return IS_NOT_NULL(node) ? node->key : NULL;
+}
+
+static inline bool _less(BST st, BSTKey keyA, BSTKey keyB) {
+  return st->keyComparator(keyA, keyB) < 0;
 }
