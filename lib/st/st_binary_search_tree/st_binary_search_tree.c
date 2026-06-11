@@ -97,9 +97,7 @@ static int _put(BST st, BSTNode *out, BSTKey key, BSTVal val) {
     node->val = val;
   }
 
-  node->n = 1;
-  node->n += IS_NOT_NULL(node->left) ? node->left->n : 0;
-  node->n += IS_NOT_NULL(node->right) ? node->right->n : 0;
+  node->n = _nodeSize(node->left) + 1 + _nodeSize(node->right);
 
   return EXIT_SUCCESS;
 }
@@ -153,7 +151,7 @@ int BST_Contains(BST st, BSTKey key, bool *out) {
   return EXIT_SUCCESS;
 }
 
-inline int BST_Size(BST st) { return IS_NOT_NULL(st->root) ? st->root->n : 0; }
+inline int BST_Size(BST st) { return _nodeSize(st->root); }
 inline bool BST_IsEmpty(BST st) { return BST_Size(st) <= 0; }
 
 static BSTNode _min(BSTNode node) {
