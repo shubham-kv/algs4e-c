@@ -112,9 +112,9 @@ int BST_Put(BST st, BSTKey key, BSTVal val) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
 
-  // if (IS_NULL(val)) {
-  //   return BST_DeleteKey(st, key);
-  // }
+  if (IS_NULL(val)) {
+    return BST_DeleteKey(st, key);
+  }
 
   ENSURE_SUCCESS(put(st, &st->root, key, val));
   return EXIT_SUCCESS;
