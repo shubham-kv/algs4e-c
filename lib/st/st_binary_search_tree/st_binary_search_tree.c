@@ -271,10 +271,10 @@ static BSTNode select(BSTNode node, int rank) {
 
   const int t = _nodeSize(node->left);
 
-  if (t < rank) {
-    return select(node->right, rank - (t + 1));
-  } else if (t > rank) {
+  if (rank < t) {
     return select(node->left, rank);
+  } else if (rank > t) {
+    return select(node->right, rank - (t + 1));
   } else {
     return node;
   }
