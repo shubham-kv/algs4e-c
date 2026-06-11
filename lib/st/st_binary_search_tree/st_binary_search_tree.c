@@ -73,7 +73,7 @@ int BST_Delete(BST *st) {
   return EXIT_SUCCESS;
 }
 
-static int _put(BST st, BSTNode *out, BSTKey key, BSTVal val) {
+static int put(BST st, BSTNode *out, BSTKey key, BSTVal val) {
   BSTNode node = *out;
 
   if (IS_NULL(node)) {
@@ -90,9 +90,9 @@ static int _put(BST st, BSTNode *out, BSTKey key, BSTVal val) {
   const int cmp = st->keyComparator(key, node->key);
 
   if (cmp < 0) {
-    ENSURE_SUCCESS(_put(st, &node->left, key, val));
+    ENSURE_SUCCESS(put(st, &node->left, key, val));
   } else if (cmp > 0) {
-    ENSURE_SUCCESS(_put(st, &node->right, key, val));
+    ENSURE_SUCCESS(put(st, &node->right, key, val));
   } else {
     node->val = val;
   }
@@ -110,11 +110,11 @@ int BST_Put(BST st, BSTKey key, BSTVal val) {
   //   return BST_DeleteKey(st, key);
   // }
 
-  ENSURE_SUCCESS(_put(st, &st->root, key, val));
+  ENSURE_SUCCESS(put(st, &st->root, key, val));
   return EXIT_SUCCESS;
 }
 
-static BSTVal _get(BST st, BSTNode node, BSTKey key) {
+static BSTVal get(BST st, BSTNode node, BSTKey key) {
   if (IS_NULL(node)) {
     return NULL;
   }
@@ -122,9 +122,9 @@ static BSTVal _get(BST st, BSTNode node, BSTKey key) {
   const int cmp = st->keyComparator(key, node->key);
 
   if (cmp < 0) {
-    return _get(st, node->left, key);
+    return get(st, node->left, key);
   } else if (cmp > 0) {
-    return _get(st, node->right, key);
+    return get(st, node->right, key);
   } else {
     return node->val;
   }
@@ -135,7 +135,7 @@ int BST_Get(BST st, BSTKey key, BSTVal *out) {
   REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
 
-  *out = _get(st, st->root, key);
+  *out = get(st, st->root, key);
   return EXIT_SUCCESS;
 }
 
@@ -154,9 +154,9 @@ int BST_Contains(BST st, BSTKey key, bool *out) {
 inline int BST_Size(BST st) { return _nodeSize(st->root); }
 inline bool BST_IsEmpty(BST st) { return BST_Size(st) <= 0; }
 
-static BSTNode _min(BSTNode node) {
+static BSTNode min(BSTNode node) {
   REQUIRE_TRUE(IS_NOT_NULL(node), EINVAL, NULL);
-  return IS_NULL(node->left) ? node : _min(node->left);
+  return IS_NULL(node->left) ? node : min(node->left);
 }
 
 int BST_Min(BST st, BSTKey *out) {
@@ -164,14 +164,14 @@ int BST_Min(BST st, BSTKey *out) {
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, EXIT_FAILURE);
 
-  BSTNode min = _min(st->root);
-  *out = _nodeKey(min);
+  BSTNode smallest = min(st->root);
+  *out = _nodeKey(smallest);
   return EXIT_SUCCESS;
 }
 
-static BSTNode _max(BSTNode node) {
+static BSTNode max(BSTNode node) {
   REQUIRE_TRUE(IS_NOT_NULL(node), EINVAL, NULL);
-  return IS_NULL(node->right) ? node : _max(node->right);
+  return IS_NULL(node->right) ? node : max(node->right);
 }
 
 int BST_Max(BST st, BSTKey *out) {
@@ -179,12 +179,12 @@ int BST_Max(BST st, BSTKey *out) {
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, EXIT_FAILURE);
 
-  BSTNode max = _max(st->root);
-  *out = _nodeKey(max);
+  BSTNode largest = max(st->root);
+  *out = _nodeKey(largest);
   return EXIT_SUCCESS;
 }
 
-static BSTNode _floor(BST st, BSTNode node, BSTKey key) {
+static BSTNode floor(BST st, BSTNode node, BSTKey key) {
   if (IS_NULL(node)) {
     return NULL;
   }
@@ -192,10 +192,10 @@ static BSTNode _floor(BST st, BSTNode node, BSTKey key) {
   const int cmp = st->keyComparator(key, node->key);
 
   if (cmp < 0) {
-    return _floor(st, node->left, key);
+    return floor(st, node->left, key);
   } else if (cmp > 0) {
-    BSTNode floor = _floor(st, node->right, key);
-    return IS_NOT_NULL(floor) ? floor : node;
+    BSTNode temp = floor(st, node->right, key);
+    return IS_NOT_NULL(temp) ? temp : node;
   } else {
     return node;
   }
@@ -207,12 +207,12 @@ int BST_Floor(BST st, BSTKey key, BSTKey *out) {
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, EXIT_FAILURE);
 
-  BSTNode floorNode = _floor(st, st->root, key);
+  BSTNode floorNode = floor(st, st->root, key);
   *out = _nodeKey(floorNode);
   return EXIT_SUCCESS;
 }
 
-static BSTNode _ceil(BST st, BSTNode node, BSTKey key) {
+static BSTNode ceil(BST st, BSTNode node, BSTKey key) {
   if (IS_NULL(node)) {
     return NULL;
   }
@@ -220,10 +220,10 @@ static BSTNode _ceil(BST st, BSTNode node, BSTKey key) {
   const int cmp = st->keyComparator(key, node->key);
 
   if (cmp < 0) {
-    BSTNode ceil = _ceil(st, node->left, key);
-    return IS_NOT_NULL(ceil) ? ceil : node;
+    BSTNode temp = ceil(st, node->left, key);
+    return IS_NOT_NULL(temp) ? temp : node;
   } else if (cmp > 0) {
-    return _ceil(st, node->right, key);
+    return ceil(st, node->right, key);
   } else {
     return node;
   }
@@ -235,12 +235,12 @@ int BST_Ceiling(BST st, BSTKey key, BSTKey *out) {
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, EXIT_FAILURE);
 
-  BSTNode ceilNode = _ceil(st, st->root, key);
+  BSTNode ceilNode = ceil(st, st->root, key);
   *out = _nodeKey(ceilNode);
   return EXIT_SUCCESS;
 }
 
-int _rank(BST st, BSTNode node, BSTKey key) {
+int rank(BST st, BSTNode node, BSTKey key) {
   if (IS_NULL(node)) {
     return 0;
   }
@@ -248,9 +248,9 @@ int _rank(BST st, BSTNode node, BSTKey key) {
   const int cmp = st->keyComparator(key, node->key);
 
   if (cmp < 0) {
-    return _rank(st, node->left, key);
+    return rank(st, node->left, key);
   } else if (cmp > 0) {
-    return _nodeSize(node->left) + 1 + _rank(st, node->right, key);
+    return _nodeSize(node->left) + 1 + rank(st, node->right, key);
   } else {
     return _nodeSize(node->left);
   }
@@ -260,11 +260,11 @@ int BST_Rank(BST st, BSTKey key, int *out) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
-  *out = _rank(st, st->root, key);
+  *out = rank(st, st->root, key);
   return EXIT_SUCCESS;
 }
 
-static BSTNode _select(BSTNode node, int rank) {
+static BSTNode select(BSTNode node, int rank) {
   if (IS_NULL(node)) {
     return NULL;
   }
@@ -272,9 +272,9 @@ static BSTNode _select(BSTNode node, int rank) {
   const int t = _nodeSize(node->left);
 
   if (t < rank) {
-    return _select(node->right, rank - (t + 1));
+    return select(node->right, rank - (t + 1));
   } else if (t > rank) {
-    return _select(node->left, rank);
+    return select(node->left, rank);
   } else {
     return node;
   }
@@ -287,7 +287,7 @@ int BST_Select(BST st, int rank, BSTKey *out) {
   REQUIRE_TRUE(rank >= 0, ERANGE, EXIT_FAILURE);
   REQUIRE_TRUE(rank < _nodeSize(st->root), ERANGE, EXIT_FAILURE);
 
-  BSTNode node = _select(st->root, rank);
+  BSTNode node = select(st->root, rank);
   *out = _nodeKey(node);
   return EXIT_SUCCESS;
 }
