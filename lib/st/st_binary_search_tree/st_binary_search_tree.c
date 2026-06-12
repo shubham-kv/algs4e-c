@@ -2,15 +2,8 @@
 #include <stdlib.h>
 
 #include "common_macros.h"
+#include "queue_linked.h"
 #include "st_binary_search_tree.h"
-
-#define ENSURE_SUCCESS(_callExpr)                                              \
-  do {                                                                         \
-    const int code = _callExpr;                                                \
-    if (code != EXIT_SUCCESS) {                                                \
-      return code;                                                             \
-    }                                                                          \
-  } while (0)
 
 struct BinarySearchTreeNode;
 typedef struct BinarySearchTreeNode *BSTNode;
@@ -26,6 +19,12 @@ struct BinarySearchTreeNode {
 struct BinarySearchTree {
   ComparatorFn keyComparator;
   struct BinarySearchTreeNode *root;
+};
+
+struct BinarySearchTreeKeysIterator {
+  struct BinarySearchTree *bst;
+  Queue keys;
+  QueueIterator keysIterator;
 };
 
 static int _nodeSize(BSTNode node);
@@ -405,6 +404,102 @@ int BST_SizeOfRange(BST st, BSTKey low, BSTKey high, int *out) {
   if (containsHigh) {
     (*out)++;
   }
+  return EXIT_SUCCESS;
+}
+
+static int keysInRange(BSTKeysIter iterator, BSTNode node, BSTKey low,
+                       BSTKey high) {
+  if (IS_NULL(node)) {
+    return EXIT_SUCCESS;
+  }
+
+  const int cmpLow = iterator->bst->keyComparator(low, node->key);
+  const int cmpHigh = iterator->bst->keyComparator(node->key, high);
+
+  if (cmpLow < 0) {
+    ENSURE_SUCCESS(keysInRange(iterator, node->left, low, high));
+  }
+  if (cmpLow <= 0 && cmpHigh <= 0) {
+    ENSURE_SUCCESS(Queue_Enqueue(iterator->keys, node->key));
+  }
+  if (cmpHigh < 0) {
+    ENSURE_SUCCESS(keysInRange(iterator, node->right, low, high));
+  }
+  return EXIT_SUCCESS;
+}
+
+static int BSTKeysIter_Init(BSTKeysIter iterator, BST st, BSTKey low,
+                            BSTKey high) {
+  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(low), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(high), EINVAL, EXIT_FAILURE);
+
+  REQUIRE_TRUE(!_less(st, high, low), EINVAL, EXIT_FAILURE);
+
+  iterator->bst = st;
+  iterator->keys = Queue_Create();
+  if (IS_NULL(iterator->keys)) {
+    return EXIT_FAILURE;
+  }
+
+  const int code = keysInRange(iterator, st->root, low, high);
+  if (code != EXIT_SUCCESS) {
+    return EXIT_FAILURE;
+  }
+
+  iterator->keysIterator = QueueIterator_Create(iterator->keys);
+  if (IS_NULL(iterator->keysIterator)) {
+    return EXIT_FAILURE;
+  }
+
+  return EXIT_SUCCESS;
+}
+
+BSTKeysIter BSTKeysIter_Create(BST st) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, NULL);
+  REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, NULL);
+  BSTKey minKey = min(st->root)->key;
+  BSTKey maxKey = max(st->root)->key;
+  return BSTKeysIter_CreateInRange(st, minKey, maxKey);
+}
+
+BSTKeysIter BSTKeysIter_CreateInRange(BST st, BSTKey low, BSTKey high) {
+  BSTKeysIter iterator = calloc(1, sizeof(*iterator));
+  REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, NULL);
+
+  const int code = BSTKeysIter_Init(iterator, st, low, high);
+  if (code != EXIT_SUCCESS) {
+    return NULL;
+  }
+  return iterator;
+}
+
+static int BSTKeysIter_Clear(BSTKeysIter iterator) {
+  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
+  ENSURE_SUCCESS(QueueIterator_Delete(&iterator->keysIterator));
+  ENSURE_SUCCESS(Queue_Delete(&iterator->keys));
+  memset(iterator, 0, sizeof(*iterator));
+  return EXIT_SUCCESS;
+}
+
+int BSTKeysIter_Delete(BSTKeysIter *iterator) {
+  REQUIRE_TRUE(IS_NOT_NULL(iterator) && IS_NOT_NULL(*iterator), EINVAL,
+               EXIT_FAILURE);
+  ENSURE_SUCCESS(BSTKeysIter_Clear(*iterator));
+  free(*iterator), (*iterator = NULL);
+  return EXIT_SUCCESS;
+}
+
+bool BSTKeysIter_HasNext(BSTKeysIter iterator) {
+  return QueueIterator_HasNext(iterator->keysIterator);
+}
+
+int BSTKeysIter_GetNext(BSTKeysIter iterator, BSTKey *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+  ENSURE_SUCCESS(QueueIterator_GetNext(iterator->keysIterator, out));
   return EXIT_SUCCESS;
 }
 
