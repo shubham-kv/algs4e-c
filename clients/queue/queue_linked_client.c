@@ -1,14 +1,16 @@
-#include "queue_linked.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFFER_SIZE 128
+#include "common_macros.h"
+#include "queue_linked.h"
+
+#define BUFFER_SIZE 32
 
 /**
  * ### Compile
  * % cmake -S . -B build
- * % make -C build
+ * % make -C build queue_linked_client
  *
  * ### Run
  * % echo "I II III IV V - - x" > input.txt
@@ -20,55 +22,72 @@ int main() {
   printf("=================\n");
   printf("\n");
 
-  char inputBuffer[BUFFER_SIZE];
-  struct LinkedQueue _queue, *queue = &_queue;
-  Queue_Init(queue);
+  char buffer[BUFFER_SIZE];
+  Queue queue = Queue_Create();
+  if (IS_NULL(queue)) {
+    return EXIT_FAILURE;
+  }
 
-  while (fscanf(stdin, "%127s", inputBuffer) != EOF) {
-    if (strncmp(inputBuffer, "x\0", 2) == 0) {
+  while (fscanf(stdin, "%30s", buffer) != EOF) {
+    if (strncmp(buffer, "x\0", 2) == 0) {
       break;
     }
 
-    if (strncmp(inputBuffer, "-\0", 2) == 0) {
+    if (strncmp(buffer, "-\0", 2) == 0) {
       if (Queue_IsEmpty(queue)) {
         printf("Queue is empty!\n");
         continue;
       }
 
-      char *str = (char *)Queue_Dequeue(queue);
-      printf("dequeue() = %s\n", str);
-      free(str), (str = NULL);
+      Item item;
+      ENSURE_CALL_SUCCESS(Queue_Dequeue(queue, &item));
+      printf("dequeue() = '%s'\n", (char *)item);
+      free((char *)item), (item = NULL);
       continue;
     }
 
-    size_t bufLen = strlen(inputBuffer);
+    size_t bufLen = strlen(buffer);
     char *input = calloc(bufLen + 1, sizeof(*input));
-    snprintf(input, bufLen + 1, "%s", inputBuffer);
+    snprintf(input, bufLen + 1, "%s", buffer);
 
-    printf("enqueue(%s)\n", input);
-    Queue_Enqueue(queue, input);
+    ENSURE_CALL_SUCCESS(Queue_Enqueue(queue, input));
+    printf("enqueue('%s')\n", input);
+
+    memset(&buffer, 0, BUFFER_SIZE);
   }
 
-  printf("\n");
-  printf("isEmpty() = %s\n", Queue_IsEmpty(queue) ? "true" : "false");
-  printf("size() = %d\n", Queue_Size(queue));
-  printf("peek() = %s\n", (char *)Queue_Peek(queue));
+  const bool isQueueEmpty = Queue_IsEmpty(queue);
 
-  struct LinkedQueueIterator _iterator, *iterator = &_iterator;
-  QueueIterator_Init(iterator, queue);
+  printf("\n");
+  printf("isEmpty() = %s\n", BOOL_TO_STRING(isQueueEmpty));
+  printf("size() = %d\n", Queue_Size(queue));
+
+  if (!isQueueEmpty) {
+    Item peekedItem;
+    ENSURE_CALL_SUCCESS(Queue_Peek(queue, &peekedItem));
+    printf("peek() = '%s'\n", (char *)peekedItem);
+  }
+
+  QueueIterator iterator = QueueIterator_Create(queue);
+  if (IS_NULL(iterator)) {
+    return EXIT_FAILURE;
+  }
 
   while (QueueIterator_HasNext(iterator)) {
-    const char *str = (char *)QueueIterator_GetNext(iterator);
-    printf("iterator_next() = %s\n", str);
+    Item next;
+    ENSURE_CALL_SUCCESS(QueueIterator_GetNext(iterator, &next));
+    printf("next() = '%s'\n", (char *)next);
   }
   printf("\n");
 
-  QueueIterator_Clear(iterator), (iterator = NULL);
+  ENSURE_CALL_SUCCESS(QueueIterator_Delete(&iterator));
 
   while (!Queue_IsEmpty(queue)) {
-    free((char *)Queue_Dequeue(queue));
+    Item item;
+    ENSURE_CALL_SUCCESS(Queue_Dequeue(queue, &item));
+    free((char *)item), (item = NULL);
   }
-  Queue_Clear(queue), (queue = NULL);
+  ENSURE_CALL_SUCCESS(Queue_Delete(&queue));
 
-  return 0;
+  return EXIT_SUCCESS;
 }
