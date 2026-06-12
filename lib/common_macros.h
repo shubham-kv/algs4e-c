@@ -22,6 +22,14 @@
     }                                                                          \
   } while (0)
 
+#define ENSURE_SUCCESS(_callExpr)                                              \
+  do {                                                                         \
+    const int code = _callExpr;                                                \
+    if (code != EXIT_SUCCESS) {                                                \
+      return code;                                                             \
+    }                                                                          \
+  } while (0)
+
 #define REQUIRE_TRUE(_expr, _errorCode, _returnVal)                            \
   do {                                                                         \
     bool isTrue = _expr;                                                       \
