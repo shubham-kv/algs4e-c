@@ -108,11 +108,11 @@ QueueIterator QueueIterator_Create(Queue queue) {
   return (QueueIterator)LinkedNodeIter_Create((LinkedNode)queue->first);
 }
 
-int QueueIterator_Clear(QueueIterator iterator) {
+inline int QueueIterator_Clear(QueueIterator iterator) {
   return LinkedNodeIter_Clear((LinkedNodeIter)iterator);
 }
 
-int QueueIterator_Delete(QueueIterator *iterator) {
+inline int QueueIterator_Delete(QueueIterator *iterator) {
   return LinkedNodeIter_Delete((LinkedNodeIter *)iterator);
 }
 
