@@ -1,0 +1,2 @@
+add_library(st_separate_chaining_hash SHARED st_separate_chaining_hash.c)
+target_include_directories(st_separate_chaining_hash PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
