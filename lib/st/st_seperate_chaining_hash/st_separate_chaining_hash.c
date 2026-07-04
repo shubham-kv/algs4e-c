@@ -67,7 +67,7 @@ SCHST SCHST_Create(ComparatorFn keyComparator, HashFn keyHasher,
 }
 
 static int SCHST_Clear(SCHST st) {
-  REQUIRE_TRUE(IS_NOT_NULL(st), ENOMEM, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
 
   for (int i = 0; i < st->tableSize; i++) {
     if (IS_NOT_NULL(st->nodes[i])) {
@@ -87,7 +87,7 @@ static int SCHST_Clear(SCHST st) {
 }
 
 int SCHST_Delete(SCHST *st) {
-  REQUIRE_TRUE(IS_NOT_NULL(st) && IS_NOT_NULL(*st), ENOMEM, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(st) && IS_NOT_NULL(*st), EINVAL, EXIT_FAILURE);
   ENSURE_SUCCESS(SCHST_Clear(*st));
   free(*st), (*st = NULL);
   return EXIT_SUCCESS;
@@ -196,6 +196,7 @@ static int SCHSTKeysIter_Init(SCHSTKeysIter iterator, SCHST st) {
 
   if (st->n > 0) {
     SCHSTKey *keys = calloc(st->n, sizeof(*keys));
+    REQUIRE_TRUE(IS_NOT_NULL(keys), ENOMEM, EXIT_FAILURE);
 
     for (int i = 0; i < st->tableSize; i++) {
       if (IS_NOT_NULL(st->nodes[i])) {
