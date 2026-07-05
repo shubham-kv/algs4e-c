@@ -9,14 +9,6 @@
 
 #define INITIAL_CAPACITY 1
 
-#define ENSURE_SUCCESS(_callExpr)                                              \
-  do {                                                                         \
-    const int code = _callExpr;                                                \
-    if (code != EXIT_SUCCESS) {                                                \
-      return code;                                                             \
-    }                                                                          \
-  } while (0)
-
 struct BinarySearchST {
   ComparatorFn keyComparator;
   BSSTKey *keys;
@@ -68,7 +60,6 @@ BSST BSST_Create(ComparatorFn keyComparator) {
 
 static int BSST_Clear(BSST st) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
-
   free(st->keys), (st->keys = NULL);
   free(st->values), (st->values = NULL);
   memset(st, 0, sizeof(*st));
@@ -77,8 +68,7 @@ static int BSST_Clear(BSST st) {
 
 int BSST_Delete(BSST *st) {
   REQUIRE_TRUE(IS_NOT_NULL(st) && IS_NOT_NULL(*st), EINVAL, EXIT_FAILURE);
-
-  BSST_Clear(*st);
+  ENSURE_SUCCESS(BSST_Clear(*st));
   free(*st), (*st = NULL);
   return EXIT_SUCCESS;
 }
@@ -123,7 +113,6 @@ int BSST_Get(BSST st, BSSTKey key, BSSTVal *out) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
-
   REQUIRE_TRUE(st->n > 0, ENODATA, EXIT_FAILURE);
 
   int rank = -1;
@@ -132,11 +121,9 @@ int BSST_Get(BSST st, BSSTKey key, BSSTVal *out) {
 
   if (rank < st->n && _equals(st, key, st->keys[rank])) {
     *out = st->values[rank];
-    return EXIT_SUCCESS;
   }
 
-  REQUIRE_TRUE(0, EINVAL, EXIT_FAILURE);
-  return EXIT_FAILURE;
+  return EXIT_SUCCESS;
 }
 
 int BSST_DeleteKey(BSST st, BSSTKey key) {
@@ -175,9 +162,9 @@ int BSST_Contains(BSST st, BSSTKey key, bool *out) {
   REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
 
-  BSSTVal val;
-  const int code = BSST_Get(st, key, &val);
-  *out = code == EXIT_SUCCESS;
+  BSSTVal val = NULL;
+  ENSURE_SUCCESS(BSST_Get(st, key, &val));
+  *out = IS_NOT_NULL(val);
   return EXIT_SUCCESS;
 }
 
@@ -321,11 +308,10 @@ BSSTKeysIter BSSTKeysIter_CreateInRange(BSST st, BSSTKey low, BSSTKey high) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, NULL);
   REQUIRE_TRUE(IS_NOT_NULL(low), EINVAL, NULL);
   REQUIRE_TRUE(IS_NOT_NULL(high), EINVAL, NULL);
+  REQUIRE_TRUE(!_less(st, high, low), EINVAL, NULL);
 
   BSSTKeysIter iterator = BSSTKeysIter_Create(st);
   REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, NULL);
-
-  REQUIRE_TRUE(!_less(st, high, low), EINVAL, NULL);
 
   int rankLow = -1;
   int code = BSST_Rank(st, low, &rankLow);
