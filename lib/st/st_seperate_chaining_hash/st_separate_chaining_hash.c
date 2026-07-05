@@ -131,15 +131,14 @@ int SCHST_Put(SCHST st, SCHSTKey key, SCHSTVal val) {
 int SCHST_Get(SCHST st, SCHSTKey key, SCHSTVal *out) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
 
   const int hash = st->keyHasher(key, st->tableSize);
   SCHSTNode cur = st->nodes[hash];
 
   for (; IS_NOT_NULL(cur); cur = cur->next) {
     if (_equals(st, cur->key, key)) {
-      if (IS_NOT_NULL(out)) {
-        *out = cur->val;
-      }
+      *out = cur->val;
       return EXIT_SUCCESS;
     }
   }
