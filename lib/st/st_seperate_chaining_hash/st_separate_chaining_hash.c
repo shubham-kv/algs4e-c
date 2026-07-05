@@ -102,9 +102,9 @@ int SCHST_Put(SCHST st, SCHSTKey key, SCHSTVal val) {
   }
 
   const int hash = st->keyHasher(key, st->tableSize);
-  SCHSTNode prev = NULL, cur = st->nodes[hash];
+  SCHSTNode cur = st->nodes[hash];
 
-  for (; IS_NOT_NULL(cur); prev = cur, cur = cur->next) {
+  for (; IS_NOT_NULL(cur); cur = cur->next) {
     if (_equals(st, cur->key, key)) {
       cur->val = val;
       return EXIT_SUCCESS;
@@ -114,15 +114,10 @@ int SCHST_Put(SCHST st, SCHSTKey key, SCHSTVal val) {
   SCHSTNode node = calloc(1, sizeof(*node));
   REQUIRE_TRUE(IS_NOT_NULL(node), ENOMEM, EXIT_FAILURE);
 
-  node->next = NULL;
+  node->next = st->nodes[hash];
   node->key = key;
   node->val = val;
-
-  if (IS_NULL(st->nodes[hash])) {
-    st->nodes[hash] = node;
-  } else {
-    prev->next = node;
-  }
+  st->nodes[hash] = node;
   st->n++;
 
   return EXIT_SUCCESS;
@@ -161,7 +156,7 @@ int SCHST_DeleteKey(SCHST st, SCHSTKey key) {
         st->nodes[hash] = cur->next;
       }
 
-      free(cur), cur = NULL;
+      free(cur), (cur = NULL);
       st->n--;
       return EXIT_SUCCESS;
     }
@@ -182,7 +177,6 @@ int SCHST_Contains(SCHST st, SCHSTKey key, bool *out) {
 }
 
 inline int SCHST_Size(SCHST st) { return st->n; }
-
 inline bool SCHST_IsEmpty(SCHST st) { return SCHST_Size(st) <= 0; }
 
 static int SCHSTKeysIter_Init(SCHSTKeysIter iterator, SCHST st) {
@@ -229,9 +223,7 @@ SCHSTKeysIter SCHSTKeysIter_Create(SCHST st) {
 
 static int SCHSTKeysIter_Clear(SCHSTKeysIter iterator) {
   REQUIRE_TRUE(IS_NOT_NULL(iterator), EINVAL, EXIT_FAILURE);
-  if (IS_NOT_NULL(iterator->keys)) {
-    free(iterator->keys), (iterator->keys = NULL);
-  }
+  free(iterator->keys), (iterator->keys = NULL);
   memset(iterator, 0, sizeof(*iterator));
   return EXIT_SUCCESS;
 }
