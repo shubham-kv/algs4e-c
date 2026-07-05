@@ -50,7 +50,11 @@ BST BST_Create(ComparatorFn keyComparator) {
   BST st = calloc(1, sizeof(*st));
   REQUIRE_TRUE(IS_NOT_NULL(st), ENOMEM, NULL);
 
-  BST_Init(st, keyComparator);
+  const int code = BST_Init(st, keyComparator);
+  if (code != EXIT_SUCCESS) {
+    return NULL;
+  }
+
   return st;
 }
 
@@ -73,7 +77,7 @@ static int BST_Clear(BST st) {
 
 int BST_Delete(BST *st) {
   REQUIRE_TRUE(IS_NOT_NULL(st) && IS_NOT_NULL(*st), EINVAL, EXIT_FAILURE);
-  BST_Clear(*st);
+  ENSURE_SUCCESS(BST_Clear(*st));
   free(*st), (*st = NULL);
   return EXIT_SUCCESS;
 }
@@ -145,7 +149,9 @@ int BST_Get(BST st, BSTKey key, BSTVal *out) {
 }
 
 static BSTNode deleteKey(BST st, BSTNode node, BSTKey key) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, NULL);
   REQUIRE_TRUE(IS_NOT_NULL(node), EINVAL, NULL);
+  REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, NULL);
 
   const int cmp = st->keyComparator(key, node->key);
 
@@ -166,8 +172,9 @@ static BSTNode deleteKey(BST st, BSTNode node, BSTKey key) {
     }
 
     BSTNode successor = min(node->right);
+    node->right = deleteMin(node->right, false);
     successor->left = node->left;
-    successor->right = deleteMin(node->right, false);
+    successor->right = node->right;
     free(node), (node = NULL);
     node = successor;
   }
@@ -191,7 +198,6 @@ int BST_Contains(BST st, BSTKey key, bool *out) {
 
   BSTVal val = NULL;
   ENSURE_SUCCESS(BST_Get(st, key, &val));
-
   *out = IS_NOT_NULL(val);
   return EXIT_SUCCESS;
 }
@@ -391,7 +397,6 @@ int BST_SizeOfRange(BST st, BSTKey low, BSTKey high, int *out) {
   REQUIRE_TRUE(IS_NOT_NULL(low), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(high), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
-
   REQUIRE_TRUE(!_less(st, high, low), EINVAL, EXIT_FAILURE);
 
   const int rankLow = rank(st, st->root, low);
@@ -435,7 +440,6 @@ static int BSTKeysIter_Init(BSTKeysIter iterator, BST st, BSTKey low,
   REQUIRE_TRUE(IS_NOT_NULL(st->root), ENODATA, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(low), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(high), EINVAL, EXIT_FAILURE);
-
   REQUIRE_TRUE(!_less(st, high, low), EINVAL, EXIT_FAILURE);
 
   iterator->bst = st;
