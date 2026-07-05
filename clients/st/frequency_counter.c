@@ -6,7 +6,7 @@
 #include "common_macros.h"
 #include "st_sequential_search.h"
 
-#define BUFFER_LENGTH 64
+#define BUFFER_LENGTH 31
 
 static void _printHelp(FILE *stream, const char *programName);
 static int _stringComparator(const void *a, const void *b);
@@ -38,80 +38,65 @@ int main(int argc, char const *argv[]) {
   memset(buffer, 0, BUFFER_LENGTH);
 
   SSST wordCountST = SSST_Create(_stringComparator);
-  REQUIRE_TRUE(IS_NOT_NULL(wordCountST), ENOMEM, EXIT_FAILURE);
+  RETURN_IF_NULL(wordCountST, EXIT_FAILURE);
 
   // Put the word (above a given threshold) and it's count into the ST
-  while (fscanf(stdin, "%63s", buffer) != EOF) {
+  while (fscanf(stdin, "%30s", buffer) != EOF) {
     const int wordLen = strlen(buffer);
 
     if (wordLen < minWordLen) {
       continue;
     }
 
-    char *word = calloc(wordLen + 1, sizeof(*word));
-    REQUIRE_TRUE(IS_NOT_NULL(word), ENOMEM, EXIT_FAILURE);
-    strncpy(word, buffer, wordLen);
-
     bool contains = false;
-    ENSURE_CALL_SUCCESS(SSST_Contains(wordCountST, word, &contains));
+    ENSURE_CALL_SUCCESS(SSST_Contains(wordCountST, buffer, &contains));
 
-    if (!contains) {
-      int *count = calloc(1, sizeof(*count));
-      REQUIRE_TRUE(IS_NOT_NULL(count), ENOMEM, EXIT_FAILURE);
-      *count = 1;
-      ENSURE_CALL_SUCCESS(SSST_Put(wordCountST, word, count));
-    } else {
-      SSSTVal countInST;
-      ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, word, &countInST));
-      int *count = (int *)countInST;
-      (*count)++;
+    if (contains) {
+      SSSTVal count;
+      ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, buffer, &count));
+      (*(int *)count)++;
+      continue;
     }
-    memset(buffer, 0, BUFFER_LENGTH);
+
+    char *word = calloc(wordLen + 1, sizeof(*word));
+    RETURN_IF_NULL(word, EXIT_FAILURE);
+
+    int *count = calloc(1, sizeof(*count));
+    RETURN_IF_NULL(count, EXIT_FAILURE);
+
+    strncpy(word, buffer, wordLen);
+    *count = 1;
+    ENSURE_CALL_SUCCESS(SSST_Put(wordCountST, word, count));
   }
 
-  // Put an empty string with count 0 in the ST
-  const char *mostFrequentWord = calloc(2, sizeof(*mostFrequentWord));
-  REQUIRE_TRUE(IS_NOT_NULL(mostFrequentWord), ENOMEM, EXIT_FAILURE);
-
-  int *mostFrequentWordCount = calloc(1, sizeof(*mostFrequentWordCount));
-  REQUIRE_TRUE(IS_NOT_NULL(mostFrequentWordCount), ENOMEM, EXIT_FAILURE);
-  *mostFrequentWordCount = 0;
-
-  ENSURE_CALL_SUCCESS(
-      SSST_Put(wordCountST, mostFrequentWord, mostFrequentWordCount));
+  const char *mostFrequentWord = NULL;
+  int mostFrequentWordCount = 0;
 
   // Iterate through the keys to find the most frequent word
   SSSTKeysIter iterator = SSSTKeysIter_Create(wordCountST);
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, EXIT_FAILURE);
+  RETURN_IF_NULL(iterator, EXIT_FAILURE);
 
   while (SSSTKeysIter_HasNext(iterator)) {
-    SSSTKey wordInST;
-    ENSURE_CALL_SUCCESS(SSSTKeysIter_GetNext(iterator, &wordInST));
-    const char *word = (const char *)wordInST;
+    SSSTKey word;
+    SSSTVal wordCount;
+    ENSURE_CALL_SUCCESS(SSSTKeysIter_GetNext(iterator, &word));
+    ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, word, &wordCount));
 
-    SSSTVal wordCountInST;
-    ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, wordInST, &wordCountInST));
-    const int *wordCount = (const int *)wordCountInST;
-
-    ENSURE_CALL_SUCCESS(
-        SSST_Get(wordCountST, mostFrequentWord, &wordCountInST));
-    const int *mostFrequentWordCount = (int *)wordCountInST;
-
-    if (*wordCount > *mostFrequentWordCount) {
-      mostFrequentWord = word;
+    if (*(int *)wordCount > mostFrequentWordCount) {
+      mostFrequentWord = (const char *)word;
+      mostFrequentWordCount = *(int *)wordCount;
     }
   }
   ENSURE_CALL_SUCCESS(SSSTKeysIter_Delete(&iterator));
 
   // Print the most frequent word & it's count
-  SSSTVal wordCountInST;
-  ENSURE_CALL_SUCCESS(SSST_Get(wordCountST, mostFrequentWord, &wordCountInST));
-  mostFrequentWordCount = (int *)wordCountInST;
-  fprintf(stdout, "%s %d\n", mostFrequentWord, *mostFrequentWordCount);
+  if (IS_NOT_NULL(mostFrequentWord)) {
+    fprintf(stdout, "%s %d\n", mostFrequentWord, mostFrequentWordCount);
+  }
 
   // Cleanup
   iterator = SSSTKeysIter_Create(wordCountST);
-  REQUIRE_TRUE(IS_NOT_NULL(iterator), ENOMEM, EXIT_FAILURE);
+  RETURN_IF_NULL(iterator, EXIT_FAILURE);
 
   while (SSSTKeysIter_HasNext(iterator)) {
     SSSTKey word;

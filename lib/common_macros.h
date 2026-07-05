@@ -39,4 +39,11 @@
     }                                                                          \
   } while (0)
 
+#define RETURN_IF_NULL(_expr, _returnVal)                                      \
+  do {                                                                         \
+    if ((_expr) == NULL) {                                                     \
+      return _returnVal;                                                       \
+    }                                                                          \
+  } while (0)
+
 #endif // __common_macros_h
