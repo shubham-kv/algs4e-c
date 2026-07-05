@@ -22,6 +22,10 @@ struct SequentialSearchSTNode {
   SSSTVal val;
 };
 
+struct SequentialSearchSTKeysIterator {
+  struct SequentialSearchSTNode *cur;
+};
+
 static bool _equals(SSST st, SSSTKey a, SSSTKey b);
 
 static int SSST_Init(SSST st, ComparatorFn keyComparator) {
@@ -39,22 +43,31 @@ SSST SSST_Create(ComparatorFn keyComparator) {
   SSST st = calloc(1, sizeof(*st));
   REQUIRE_TRUE(IS_NOT_NULL(st), ENOMEM, NULL);
 
-  SSST_Init(st, keyComparator);
+  const int code = SSST_Init(st, keyComparator);
+  if (code != EXIT_SUCCESS) {
+    return NULL;
+  }
   return st;
 }
 
 static int SSST_Clear(SSST st) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
-  while (!SSST_IsEmpty(st)) {
-    SSST_DeleteKey(st, st->first->key);
+
+  SSSTNode cur = st->first, next = NULL;
+  st->first = NULL;
+
+  for (; IS_NOT_NULL(cur); cur = next) {
+    next = cur->next;
+    free(cur), (cur = NULL);
   }
+
   memset(st, 0, sizeof(*st));
   return EXIT_SUCCESS;
 }
 
 int SSST_Delete(SSST *st) {
   REQUIRE_TRUE(IS_NOT_NULL(st) && IS_NOT_NULL(*st), EINVAL, EXIT_FAILURE);
-  SSST_Clear(*st);
+  ENSURE_SUCCESS(SSST_Clear(*st));
   free(*st), (*st = NULL);
   return EXIT_SUCCESS;
 }
@@ -90,18 +103,17 @@ int SSST_Put(SSST st, SSSTKey key, SSSTVal val) {
 int SSST_Get(SSST st, SSSTKey key, SSSTVal *out) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
   REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
 
   SSSTNode cur = st->first;
   for (; IS_NOT_NULL(cur); cur = cur->next) {
     if (_equals(st, cur->key, key)) {
-      if (IS_NOT_NULL(out)) {
-        *out = cur->val;
-      }
+      *out = cur->val;
       return EXIT_SUCCESS;
     }
   }
 
-  return EXIT_FAILURE;
+  return EXIT_SUCCESS;
 }
 
 int SSST_DeleteKey(SSST st, SSSTKey key) {
@@ -123,19 +135,22 @@ int SSST_DeleteKey(SSST st, SSSTKey key) {
     }
   }
 
-  return EXIT_FAILURE;
+  return EXIT_SUCCESS;
 }
 
-inline bool SSST_Contains(SSST st, SSSTKey key) {
-  return SSST_Get(st, key, NULL) == EXIT_SUCCESS;
+int SSST_Contains(SSST st, SSSTKey key, bool *out) {
+  REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(key), EINVAL, EXIT_FAILURE);
+  REQUIRE_TRUE(IS_NOT_NULL(out), EINVAL, EXIT_FAILURE);
+
+  SSSTVal val = NULL;
+  ENSURE_SUCCESS(SSST_Get(st, key, &val));
+  *out = IS_NOT_NULL(val);
+  return EXIT_SUCCESS;
 }
 
 inline int SSST_Size(SSST st) { return st->n; }
-inline bool SSST_IsEmpty(SSST st) { return SSST_Size(st) == 0; }
-
-struct SequentialSearchSTKeysIterator {
-  struct SequentialSearchSTNode *cur;
-};
+inline bool SSST_IsEmpty(SSST st) { return SSST_Size(st) <= 0; }
 
 SSSTKeysIter SSSTKeysIter_Create(SSST st) {
   REQUIRE_TRUE(IS_NOT_NULL(st), EINVAL, NULL);
@@ -159,7 +174,7 @@ int SSSTKeysIter_GetNext(SSSTKeysIter iterator, SSSTKey *out) {
       LinkedNodeIter_GetNext((LinkedNodeIter)iterator, (LinkedNode *)&cur);
 
   if (code != EXIT_SUCCESS) {
-    return EXIT_FAILURE;
+    return code;
   }
 
   *out = cur->key;

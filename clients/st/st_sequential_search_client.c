@@ -37,7 +37,8 @@ int main(int argc, char const *argv[]) {
 
     SSSTKey key = &keys[i];
     SSSTVal val = &values[i];
-    const bool contains = SSST_Contains(st, key);
+    bool contains = false;
+    ENSURE_CALL_SUCCESS(SSST_Contains(st, key, &contains));
 
     fprintf(out, "contains('%c') = %s\n", *(char *)key,
             BOOL_TO_STRING(contains));

@@ -22,7 +22,7 @@ typedef struct SequentialSearchSTKeysIterator *SSSTKeysIter;
  int SSST_Put(ST st, KEY key, VAL val);
  int SSST_Get(ST st, KEY key, VAL *out);
  int SSST_DeleteKey(ST st, KEY key);
-bool SSST_Contains(ST st, KEY key);
+ int SSST_Contains(ST st, KEY key, bool *out);
  int SSST_Size(ST st);
 bool SSST_IsEmpty(ST st);
 

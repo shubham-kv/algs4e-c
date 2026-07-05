@@ -58,7 +58,10 @@ Test(
 
     cr_expect_eq(SSST_Size(st), i + 1);
     cr_expect_eq(SSST_IsEmpty(st), false);
-    cr_expect_eq(SSST_Contains(st, key), true);
+
+    bool contains = false;
+    cr_assert_eq(SSST_Contains(st, key, &contains), EXIT_SUCCESS);
+    cr_expect_eq(contains, true);
 
     SSSTVal returnedVal;
     int expected = vals[i];
@@ -106,7 +109,10 @@ Test(
 
     // Expect key to exist in original keys array
     cr_expect_eq(0 <= keyIndex && keyIndex < n, true); 
-    cr_expect_eq(SSST_Contains(st, stKey), true);
+
+    bool contains = false;
+    cr_assert_eq(SSST_Contains(st, stKey, &contains), EXIT_SUCCESS);
+    cr_expect_eq(contains, true);
   }
 
   const bool hasDuplicateKeys = ArrUtils_ContainsDuplicates(keyIndices,
@@ -139,9 +145,14 @@ Test(
     SSSTKey key = &keys[i];
     cr_assert_eq(SSST_DeleteKey(st, key), EXIT_SUCCESS);
 
-    SSSTVal val;
-    cr_expect_eq(SSST_Contains(st, key), false);
-    cr_expect_neq(SSST_Get(st, key, &val), EXIT_SUCCESS);
+    bool contains = false;
+    cr_assert_eq(SSST_Contains(st, key, &contains), EXIT_SUCCESS);
+    cr_expect_eq(contains, false);
+
+    SSSTVal val = NULL;
+    cr_assert_eq(SSST_Get(st, key, &val), EXIT_SUCCESS);
+    cr_expect_eq(val, NULL);
+
     cr_expect_eq(SSST_Size(st), n - i - 1);
   }
 }

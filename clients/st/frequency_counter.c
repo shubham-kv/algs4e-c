@@ -52,7 +52,10 @@ int main(int argc, char const *argv[]) {
     REQUIRE_TRUE(IS_NOT_NULL(word), ENOMEM, EXIT_FAILURE);
     strncpy(word, buffer, wordLen);
 
-    if (!SSST_Contains(wordCountST, word)) {
+    bool contains = false;
+    ENSURE_CALL_SUCCESS(SSST_Contains(wordCountST, word, &contains));
+
+    if (!contains) {
       int *count = calloc(1, sizeof(*count));
       REQUIRE_TRUE(IS_NOT_NULL(count), ENOMEM, EXIT_FAILURE);
       *count = 1;
